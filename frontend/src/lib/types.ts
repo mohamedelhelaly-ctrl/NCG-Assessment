@@ -93,3 +93,37 @@ export interface ProductPayload {
   description_ar: string | null
   is_active: boolean
 }
+
+// ---- storefront (already resolved for the request language by the server) ----
+export interface NamedCount {
+  id: number
+  name: string
+  product_count: number
+}
+
+export interface Tier {
+  id: number
+  label: string
+  units: number
+  price_fils: number
+}
+
+export interface StoreImage {
+  id: number
+  url: string
+  alt: string
+}
+
+export interface StoreProduct {
+  id: number
+  name: string
+  description: string
+  brand: { id: number; name: string }
+  category: { id: number; name: string }
+  main_image: StoreImage | null
+  tiers: Tier[]
+}
+
+export interface StoreProductDetail extends StoreProduct {
+  images: StoreImage[]
+}

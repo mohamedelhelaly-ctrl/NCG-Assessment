@@ -3,7 +3,7 @@
     "name": "MedicStore"
   },
   "title": {
-    "home": "الرئيسية",
+    "home": "مستلزمات طبية",
     "login": "تسجيل الدخول",
     "register": "إنشاء حساب",
     "notFound": "الصفحة غير موجودة"
@@ -14,7 +14,8 @@
     "signIn": "تسجيل الدخول",
     "createAccount": "إنشاء حساب",
     "signOut": "تسجيل الخروج",
-    "switchLanguage": "English"
+    "switchLanguage": "English",
+    "cart": "السلة"
   },
   "common": {
     "loading": "جارٍ التحميل…",
@@ -36,11 +37,6 @@
     "pageOf": "الصفحة {{page}} من {{total}}",
     "pagination": "ترقيم الصفحات",
     "results": "عدد النتائج: {{count}}"
-  },
-  "status": {
-    "checking": "جارٍ فحص الخدمة…",
-    "reachable": "الخدمة وقاعدة البيانات متاحتان.",
-    "unreachable": "تعذّر الوصول إلى الخدمة: {{message}}"
   },
   "auth": {
     "signInTitle": "تسجيل الدخول",
@@ -221,5 +217,46 @@
       "saveFirst": "احفظ المنتج أولًا، ثم يمكنك إضافة الصور.",
       "noFile": "لم يتم اختيار ملف"
     }
+  },
+  "store": {
+    "heroTitle": "مستلزمات طبية، تُباع بالعبوة وبالحزمة.",
+    "heroSub": "اختر حزمة وادفع أقل عن كل عبوة.",
+    "searchLabel": "ابحث عن منتج أو علامة تجارية أو فئة",
+    "searchPlaceholder": "ابحث عن قفازات أو حقن أو ضمادات…",
+    "searchButton": "بحث",
+    "filters": "التصفية",
+    "categoryTitle": "الفئة",
+    "brandTitle": "العلامة التجارية",
+    "allProducts": "كل المنتجات",
+    "allBrands": "كل العلامات",
+    "results": "عدد المنتجات: {{count}}",
+    "removeFilter": "إزالة التصفية: {{name}}",
+    "loading": "جارٍ تحميل المنتجات…",
+    "empty": "لا توجد منتجات تطابق بحثك أو عوامل التصفية. جرّب كلمة أخرى أو امسح التصفية.",
+    "emptyAll": "لا توجد منتجات معروضة للبيع بعد. يرجى العودة قريبًا.",
+    "offerLegend": "اختر حزمة",
+    "bestValue": "الأوفر",
+    "save": "وفّر {{percent}}% عن كل عبوة",
+    "perPack": "{{price}} للعبوة",
+    "addToCart": "أضف إلى السلة",
+    "added": "تمت الإضافة إلى السلة",
+    "noImage": "لا توجد صورة بعد",
+    "filterGroup": "تصفية المنتجات"
+  },
+  "product": {
+    "back": "كل المنتجات",
+    "bundlesLabel": "عدد الحزم",
+    "fewer": "حزم أقل",
+    "more": "حزم أكثر",
+    "bundlesError": "أدخل عددًا صحيحًا من 1 إلى 99",
+    "summary": "{{bundles}} × {{label}}",
+    "totalPacks": "إجمالي العبوات: {{packs}}",
+    "total": "الإجمالي",
+    "addedMessage": "تمت الإضافة إلى سلتك: {{bundles}} × {{label}}.",
+    "notFoundTitle": "هذا المنتج غير متاح",
+    "notFoundBody": "قد يكون تمت إزالته، أو أنه غير معروض للبيع الآن.",
+    "gallery": "صور المنتج",
+    "showImage": "عرض الصورة {{number}}",
+    "descriptionTitle": "عن هذا المنتج"
   }
 }

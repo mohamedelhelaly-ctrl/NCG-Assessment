@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router'
 import { useAuth } from '../../lib/authContext'
+import { useCart } from '../../lib/cartContext'
 import LanguageSwitcher from './LanguageSwitcher'
 
 /** The store mark: four packs in a block. */
@@ -18,6 +19,7 @@ export default function Layout() {
   const { t } = useTranslation()
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const cart = useCart()
 
   return (
     <div className="min-h-screen">
@@ -46,7 +48,7 @@ export default function Layout() {
                 <span className="hidden max-w-40 truncate text-muted sm:inline">{user.full_name}</span>
                 <button
                   type="button"
-                  className="rounded-md px-2.5 py-1.5 hover:bg-primary-soft"
+                  className="whitespace-nowrap rounded-md px-2.5 py-1.5 hover:bg-primary-soft"
                   onClick={() => {
                     logout()
                     navigate('/login')
@@ -57,13 +59,24 @@ export default function Layout() {
               </>
             ) : (
               <>
-                <Link to="/login" className="rounded-md px-2.5 py-1.5 hover:bg-primary-soft">
+                <Link to="/login" className="whitespace-nowrap rounded-md px-2.5 py-1.5 hover:bg-primary-soft">
                   {t('nav.signIn')}
                 </Link>
-                <Link to="/register" className="btn btn-sm btn-primary">
+                <Link to="/register" className="btn btn-sm btn-primary hidden whitespace-nowrap sm:inline-flex">
                   {t('nav.createAccount')}
                 </Link>
               </>
+            )}
+            {cart.count > 0 && (
+              <span
+                role="status"
+                className="inline-flex items-center gap-1.5 rounded-md bg-primary-soft px-2.5 py-1.5 font-medium text-primary-strong"
+              >
+                {t('nav.cart')}
+                <span className="rounded bg-primary px-1.5 text-xs leading-5 text-white tabular-nums">
+                  {cart.count}
+                </span>
+              </span>
             )}
             <LanguageSwitcher />
           </div>

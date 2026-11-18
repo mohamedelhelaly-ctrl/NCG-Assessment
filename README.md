@@ -2,7 +2,7 @@
 
 A storefront and admin area for a small catalog where each product has several **bundle offers** (pricing tiers), in English and Arabic.
 
-Status: **M3** (skeleton, accounts and roles, catalog API, image uploads, demo data, English/Arabic interface and the admin area). See [docs/](docs/) for the [requirements](docs/REQUIREMENTS_DRAFT.md) and the [design](docs/DESIGN.md).
+Status: **M4** (accounts and roles, catalog API, image uploads, demo data, English/Arabic interface, the admin area, and the storefront with filters, search and product pages; the cart page is next). See [docs/](docs/) for the [requirements](docs/REQUIREMENTS_DRAFT.md) and the [design](docs/DESIGN.md).
 
 ## Layout
 

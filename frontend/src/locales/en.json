@@ -3,7 +3,7 @@
     "name": "MedicStore"
   },
   "title": {
-    "home": "Home",
+    "home": "Medical supplies",
     "login": "Sign in",
     "register": "Create account",
     "notFound": "Page not found"
@@ -14,7 +14,8 @@
     "signIn": "Sign in",
     "createAccount": "Create account",
     "signOut": "Sign out",
-    "switchLanguage": "العربية"
+    "switchLanguage": "العربية",
+    "cart": "Cart"
   },
   "common": {
     "loading": "Loading…",
@@ -36,11 +37,6 @@
     "pageOf": "Page {{page}} of {{total}}",
     "pagination": "Pagination",
     "results": "Results: {{count}}"
-  },
-  "status": {
-    "checking": "Checking the API…",
-    "reachable": "API and database are reachable.",
-    "unreachable": "API unreachable: {{message}}"
   },
   "auth": {
     "signInTitle": "Sign in",
@@ -221,5 +217,46 @@
       "saveFirst": "Save the product first, then you can add images.",
       "noFile": "No file chosen"
     }
+  },
+  "store": {
+    "heroTitle": "Medical supplies, by the pack and by the bundle.",
+    "heroSub": "Pick a bundle and pay less for every pack.",
+    "searchLabel": "Search products, brands or categories",
+    "searchPlaceholder": "Search gloves, syringes, bandages…",
+    "searchButton": "Search",
+    "filters": "Filters",
+    "categoryTitle": "Category",
+    "brandTitle": "Brand",
+    "allProducts": "All products",
+    "allBrands": "All brands",
+    "results": "Products: {{count}}",
+    "removeFilter": "Remove filter: {{name}}",
+    "loading": "Loading products…",
+    "empty": "No products match your search or filters. Try another word, or clear the filters.",
+    "emptyAll": "No products are on sale yet. Please check back soon.",
+    "offerLegend": "Choose a bundle",
+    "bestValue": "Best value",
+    "save": "Save {{percent}}% per pack",
+    "perPack": "{{price}} per pack",
+    "addToCart": "Add to cart",
+    "added": "Added to cart",
+    "noImage": "No picture yet",
+    "filterGroup": "Filter products"
+  },
+  "product": {
+    "back": "All products",
+    "bundlesLabel": "Number of bundles",
+    "fewer": "Fewer bundles",
+    "more": "More bundles",
+    "bundlesError": "Enter a whole number from 1 to 99",
+    "summary": "{{bundles}} × {{label}}",
+    "totalPacks": "Total packs: {{packs}}",
+    "total": "Total",
+    "addedMessage": "Added to your cart: {{bundles}} × {{label}}.",
+    "notFoundTitle": "This product isn't available",
+    "notFoundBody": "It may have been removed, or it isn't on sale right now.",
+    "gallery": "Product pictures",
+    "showImage": "Show picture {{number}}",
+    "descriptionTitle": "About this product"
   }
 }

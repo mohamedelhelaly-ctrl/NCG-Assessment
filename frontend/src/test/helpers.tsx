@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router'
 import { vi } from 'vitest'
 import App from '../App'
 import { AuthProvider } from '../lib/auth'
+import { CartProvider } from '../lib/cart'
 
 export interface Call {
   key: string
@@ -40,7 +41,9 @@ export function renderApp(path = '/') {
   return render(
     <MemoryRouter initialEntries={[path]}>
       <AuthProvider>
-        <App />
+        <CartProvider>
+          <App />
+        </CartProvider>
       </AuthProvider>
     </MemoryRouter>,
   )
@@ -129,3 +132,55 @@ export const refRoutes = {
     named({ id: 2, name: 'Vitamins', display_name: 'Vitamins', name_ar: null }),
   ]),
 }
+
+// ---- storefront fixtures ----
+export const tier = (id: number, units: number, price_fils: number) => ({
+  id,
+  units,
+  price_fils,
+  label: `${units} pack${units > 1 ? 's' : ''}`,
+})
+
+export function storeProduct(over: Record<string, unknown> = {}) {
+  return {
+    id: 7,
+    name: 'Nitrile Examination Gloves',
+    description: 'Powder-free nitrile gloves for examinations.',
+    brand: { id: 1, name: 'Nuvexa Medical' },
+    category: { id: 1, name: 'Medical Consumables' },
+    main_image: { id: 1, url: 'http://img.test/7.svg', alt: 'Nitrile Examination Gloves' },
+    tiers: [tier(11, 1, 5500), tier(12, 4, 19500), tier(13, 12, 55000)],
+    ...over,
+  }
+}
+
+export const storeDetail = (over: Record<string, unknown> = {}) => ({
+  ...storeProduct(),
+  images: [
+    { id: 1, url: 'http://img.test/7a.svg', alt: 'Front view' },
+    { id: 2, url: 'http://img.test/7b.svg', alt: 'Side view' },
+  ],
+  ...over,
+})
+
+export const brandCounts = [
+  { id: 1, name: 'Nuvexa Medical', product_count: 2 },
+  { id: 2, name: 'Orvanta Health', product_count: 4 },
+]
+export const categoryCounts = [
+  { id: 1, name: 'Medical Consumables', product_count: 4 },
+  { id: 2, name: 'Medical Devices', product_count: 2 },
+]
+
+/** The three public lists the storefront reads, with the given products on page 1. */
+export function storeRoutes(products: unknown[], over: Record<string, Handler> = {}): Record<string, Handler> {
+  return {
+    'GET /api/v1/products': json(page(products, { page_size: 12 })),
+    'GET /api/v1/brands': json(brandCounts),
+    'GET /api/v1/categories': json(categoryCounts),
+    ...over,
+  }
+}
+
+/** Formatted money as Intl writes it (a no-break space after "KWD"), as a regex-safe matcher. */
+export const kwd = (amount: string) => new RegExp(`KWD\\s${amount.replace('.', '\\.')}`)

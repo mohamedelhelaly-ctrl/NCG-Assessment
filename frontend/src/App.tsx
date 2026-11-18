@@ -9,13 +9,15 @@ import ProductsPage from './pages/admin/ProductsPage'
 import LoginPage from './pages/LoginPage'
 import NotFoundPage from './pages/NotFoundPage'
 import RegisterPage from './pages/RegisterPage'
-import StatusPage from './pages/StatusPage'
+import ProductPage from './pages/ProductPage'
+import StorePage from './pages/StorePage'
 
 export default function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={<StatusPage />} />
+        <Route path="/" element={<StorePage />} />
+        <Route path="/products/:id" element={<ProductPage />} />
         <Route element={<GuestOnly />}>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />

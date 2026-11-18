@@ -9,6 +9,7 @@ import '@fontsource/ibm-plex-sans-arabic/arabic-500.css'
 import '@fontsource/ibm-plex-sans-arabic/arabic-600.css'
 import App from './App'
 import { AuthProvider } from './lib/auth'
+import { CartProvider } from './lib/cart'
 import './lib/i18n'
 import './index.css'
 
@@ -16,7 +17,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <App />
+        <CartProvider>
+          <App />
+        </CartProvider>
       </AuthProvider>
     </BrowserRouter>
   </StrictMode>,

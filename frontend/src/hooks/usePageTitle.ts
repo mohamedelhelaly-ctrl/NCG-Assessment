@@ -9,3 +9,11 @@ export function usePageTitle(key: string) {
     document.title = `${t(key)} · ${t('app.name')}`
   }, [t, key, language])
 }
+
+/** Sets the document title from text that is already final, such as a product name. */
+export function useDocumentTitle(text: string | null) {
+  const { t } = useTranslation()
+  useEffect(() => {
+    if (text) document.title = `${text} · ${t('app.name')}`
+  }, [text, t])
+}
