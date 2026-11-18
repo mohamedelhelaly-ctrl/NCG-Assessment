@@ -100,57 +100,77 @@ export default function ImageSection({ productId, images, onChanged }: Props) {
   }
 
   return (
-    <section aria-labelledby="images-heading" className="space-y-3">
-      <h3 id="images-heading" className="text-lg font-semibold">
-        {t('admin.images.title')}
-      </h3>
-      <p className="text-sm text-slate-600">{t('admin.images.hint', { max: MAX_IMAGES })}</p>
+    <section aria-labelledby="images-heading" className="space-y-4">
+      <div>
+        <h3 id="images-heading" className="text-lg font-semibold">
+          {t('admin.images.title')}
+        </h3>
+        <p className="mt-1 max-w-prose text-sm text-muted">{t('admin.images.hint', { max: MAX_IMAGES })}</p>
+      </div>
       {error !== null && <ErrorState message={errorText(t, error)} />}
 
       {images.length === 0 && <EmptyState>{t('admin.images.empty')}</EmptyState>}
-      <ul className="grid gap-3 sm:grid-cols-2">
-        {images.map((image, index) => (
-          <ImageCard
-            key={image.id}
-            image={image}
-            index={index}
-            isMain={index === 0}
-            canMoveUp={index > 0}
-            canMoveDown={index < images.length - 1}
-            busy={busy}
-            onMove={(to) => move(index, to)}
-            onDelete={() => setDeleting(image)}
-            onChanged={onChanged}
-          />
-        ))}
-      </ul>
+      {images.length > 0 && (
+        <ul className="records">
+          {images.map((image, index) => (
+            <ImageCard
+              key={image.id}
+              image={image}
+              index={index}
+              isMain={index === 0}
+              canMoveUp={index > 0}
+              canMoveDown={index < images.length - 1}
+              busy={busy}
+              onMove={(to) => move(index, to)}
+              onDelete={() => setDeleting(image)}
+              onChanged={onChanged}
+            />
+          ))}
+        </ul>
+      )}
 
-      <form onSubmit={upload} noValidate className="card space-y-3 p-4" aria-label={t('admin.images.upload')}>
-        <h4 className="font-medium">{t('admin.images.upload')}</h4>
-        {full && <p className="text-sm text-amber-700">{t('admin.images.full', { max: MAX_IMAGES })}</p>}
-        <div className="space-y-1">
-          <label htmlFor="image-file" className="block text-sm font-medium">
-            {t('admin.images.file')}
-          </label>
-          <input
-            id="image-file"
-            ref={fileRef}
-            type="file"
-            accept={TYPES.join(',')}
-            disabled={full || busy}
-            aria-invalid={errors.file ? true : undefined}
-            aria-describedby={errors.file ? 'image-file-error' : undefined}
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          />
+      <form
+        onSubmit={upload}
+        noValidate
+        className="space-y-4 rounded-lg border border-dashed border-line bg-surface p-4"
+        aria-label={t('admin.images.upload')}
+      >
+        <h4 className="font-semibold">{t('admin.images.upload')}</h4>
+        {full && <p className="text-sm text-amber">{t('admin.images.full', { max: MAX_IMAGES })}</p>}
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap items-center gap-3">
+            <input
+              id="image-file"
+              ref={fileRef}
+              type="file"
+              className="peer sr-only"
+              accept={TYPES.join(',')}
+              disabled={full || busy}
+              aria-invalid={errors.file ? true : undefined}
+              aria-describedby={errors.file ? 'image-file-error' : undefined}
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+            <label
+              htmlFor="image-file"
+              className="btn cursor-pointer peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary peer-disabled:cursor-not-allowed peer-disabled:opacity-50"
+            >
+              {t('admin.images.file')}
+            </label>
+            <span className="min-w-0 truncate text-sm text-muted">
+              {file ? file.name : t('admin.images.noFile')}
+            </span>
+          </div>
           {errors.file && (
-            <p id="image-file-error" className="text-sm text-red-700">
+            <p id="image-file-error" className="text-sm text-danger">
               {errors.file}
             </p>
           )}
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2">
           <Field
             label={t('admin.images.altEn')}
+dir="ltr"
+lang="en"
             value={alt}
             onChange={setAlt}
             error={errors.alt}
@@ -237,44 +257,75 @@ function ImageCard({
   }
 
   return (
-    <li className="card space-y-2 p-3">
-      <div className="relative">
-        <img src={image.url} alt={image.alt} className="h-40 w-full rounded object-cover" />
+    <li className="flex flex-col gap-4 p-4 sm:flex-row">
+      <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-md bg-paper">
+        <img src={image.url} alt={image.alt} className="h-full w-full object-cover" />
         {isMain && (
-          <span className="badge absolute start-2 top-2 border-green-700 bg-white text-green-800">
+          <span className="badge badge-ok absolute start-1.5 top-1.5 bg-surface/95">
             {t('admin.images.main')}
           </span>
         )}
       </div>
-      <Field label={t('admin.images.altEn')} value={alt} onChange={setAlt} error={errors.alt} maxLength={200} />
-      <Field
-        label={t('admin.images.altAr')}
-        value={altAr}
-        onChange={setAltAr}
-        error={errors.alt_ar}
-        dir="rtl"
-        lang="ar"
-        maxLength={200}
-      />
-      {error !== null && <ErrorState message={errorText(t, error)} />}
-      <div className="flex flex-wrap gap-2">
-        <button type="button" className="btn btn-sm btn-primary" disabled={saving || busy} onClick={() => void saveAlt()}>
-          {saving ? t('common.saving') : t('admin.images.saveAlt')}
-        </button>
-        {!isMain && (
-          <button type="button" className="btn btn-sm" disabled={busy} onClick={() => onMove(0)}>
-            {t('admin.images.makeMain')}
-          </button>
-        )}
-        <button type="button" className="btn btn-sm" disabled={!canMoveUp || busy} onClick={() => onMove(index - 1)}>
-          {t('admin.images.moveEarlier')}
-        </button>
-        <button type="button" className="btn btn-sm" disabled={!canMoveDown || busy} onClick={() => onMove(index + 1)}>
-          {t('admin.images.moveLater')}
-        </button>
-        <button type="button" className="btn btn-sm btn-danger" disabled={busy} onClick={onDelete}>
-          {t('common.delete')}
-        </button>
+      <div className="min-w-0 flex-1 space-y-3">
+        <div className="grid gap-3 md:grid-cols-2">
+          <Field
+            label={t('admin.images.altEn')}
+dir="ltr"
+lang="en"
+            value={alt}
+            onChange={setAlt}
+            error={errors.alt}
+            maxLength={200}
+          />
+          <Field
+            label={t('admin.images.altAr')}
+            value={altAr}
+            onChange={setAltAr}
+            error={errors.alt_ar}
+            dir="rtl"
+            lang="ar"
+            maxLength={200}
+          />
+        </div>
+        {error !== null && <ErrorState message={errorText(t, error)} />}
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="btn btn-sm btn-primary"
+              disabled={saving || busy}
+              onClick={() => void saveAlt()}
+            >
+              {saving ? t('common.saving') : t('admin.images.saveAlt')}
+            </button>
+            <button type="button" className="btn btn-sm btn-danger" disabled={busy} onClick={onDelete}>
+              {t('common.delete')}
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {!isMain && (
+              <button type="button" className="btn btn-sm" disabled={busy} onClick={() => onMove(0)}>
+                {t('admin.images.makeMain')}
+              </button>
+            )}
+            <button
+              type="button"
+              className="btn btn-sm"
+              disabled={!canMoveUp || busy}
+              onClick={() => onMove(index - 1)}
+            >
+              {t('admin.images.moveEarlier')}
+            </button>
+            <button
+              type="button"
+              className="btn btn-sm"
+              disabled={!canMoveDown || busy}
+              onClick={() => onMove(index + 1)}
+            >
+              {t('admin.images.moveLater')}
+            </button>
+          </div>
+        </div>
       </div>
     </li>
   )

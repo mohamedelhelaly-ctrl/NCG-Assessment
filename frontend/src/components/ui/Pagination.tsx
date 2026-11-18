@@ -14,7 +14,7 @@ export default function Pagination({ page, totalPages, onChange }: Props) {
       <button type="button" className="btn" disabled={page <= 1} onClick={() => onChange(page - 1)}>
         {t('common.previous')}
       </button>
-      <span className="text-sm">{t('common.pageOf', { page, total: totalPages })}</span>
+      <span className="text-sm text-muted">{t('common.pageOf', { page, total: totalPages })}</span>
       <button
         type="button"
         className="btn"

@@ -140,8 +140,12 @@ function ProductForm({
     return next
   }
 
-  async function onSubmit(event: FormEvent) {
+  function onSubmit(event: FormEvent) {
     event.preventDefault()
+    void submit()
+  }
+
+  async function submit() {
     const next = validate()
     const payload: ProductPayload = {
       brand_id: Number(form.brand_id),
@@ -211,24 +215,40 @@ function ProductForm({
   const noBrands = brands.data && brands.data.length === 0
   const noCategories = categories.data && categories.data.length === 0
   const activeBlocked = tierCount === 0
+  const baseline = product ? fromProduct(product) : EMPTY
+  const dirty =
+    JSON.stringify(form) !== JSON.stringify(baseline) || (!product && drafts.length > 0)
 
   return (
     <div className="space-y-8">
-      <div className="space-y-2">
-        <Link to="/admin/products" className="text-sm underline">
+      <header className="space-y-1.5">
+        <Link to="/admin/products" className="text-sm text-muted hover:text-primary">
           {t('admin.form.backToList')}
         </Link>
-        <h2 className="text-xl font-semibold">
+        <h2 className="text-2xl font-semibold">
           {product ? t('admin.form.editTitle') : t('admin.form.createTitle')}
         </h2>
+        {product && (
+          <p className="text-muted">
+            <bdi>{product.name}</bdi>
+          </p>
+        )}
         {flash && <Notice>{flash}</Notice>}
-      </div>
+      </header>
 
-      <form onSubmit={onSubmit} noValidate className="space-y-8" aria-label={t('admin.form.details')}>
-        <section className="card space-y-4 p-4">
-          <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_19rem]">
+        {/* Content: each field is written once in English and, optionally, in Arabic. */}
+        <form
+          onSubmit={onSubmit}
+          noValidate
+          aria-label={t('admin.form.details')}
+          className="space-y-5 lg:col-start-1"
+        >
+          <div className="grid gap-5 md:grid-cols-2">
             <Field
               label={t('admin.form.nameEn')}
+dir="ltr"
+lang="en"
               value={form.name}
               onChange={(v) => set('name', v)}
               error={errors.name}
@@ -245,12 +265,17 @@ function ProductForm({
               maxLength={200}
               hint={form.name_ar.trim() ? undefined : t('admin.form.arabicHint')}
             />
+          </div>
+          <div className="grid gap-5 md:grid-cols-2">
             <Field
               label={t('admin.form.descEn')}
+dir="ltr"
+lang="en"
               value={form.description}
               onChange={(v) => set('description', v)}
               error={errors.description}
               multiline
+              rows={5}
               required
             />
             <Field
@@ -259,13 +284,39 @@ function ProductForm({
               onChange={(v) => set('description_ar', v)}
               error={errors.description_ar}
               multiline
+              rows={5}
               dir="rtl"
               lang="ar"
               hint={form.description_ar.trim() ? undefined : t('admin.form.arabicHint')}
             />
           </div>
+          {formError !== null && <ErrorState message={errorText(t, formError)} />}
+        </form>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+        {/* Status, where it sells, and the one Save button. Sticky beside the content on desktop. */}
+        <aside className="space-y-5 self-start rounded-lg border border-line bg-surface p-5 lg:sticky lg:top-6 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+          <div className="flex items-start gap-3">
+            <input
+              id="product-active"
+              type="checkbox"
+              className="switch mt-0.5"
+              checked={form.is_active}
+              disabled={activeBlocked && !form.is_active}
+              aria-describedby="active-hint"
+              onChange={(e) => set('is_active', e.target.checked)}
+            />
+            <div className="min-w-0">
+              <label htmlFor="product-active" className="block font-medium">
+                {t('admin.form.active')}
+              </label>
+              <p id="active-hint" className="mt-0.5 text-xs text-muted">
+                {activeBlocked ? t('admin.form.activeNeedsTier') : t('admin.form.activeHint')}
+              </p>
+              {errors.is_active && <p className="mt-1 text-sm text-danger">{errors.is_active}</p>}
+            </div>
+          </div>
+
+          <div className="space-y-4 border-t border-line pt-5">
             <SelectField
               label={t('admin.form.brand')}
               value={form.brand_id}
@@ -285,66 +336,65 @@ function ProductForm({
                 label: c.display_name,
               }))}
             />
-          </div>
-          {(noBrands || noCategories) && (
-            <p className="text-sm text-amber-700">
-              {t('admin.form.createRefsFirst')}{' '}
-              <Link to="/admin/brands" className="underline">
-                {t('admin.brand.title')}
-              </Link>{' '}
-              ·{' '}
-              <Link to="/admin/categories" className="underline">
-                {t('admin.category.title')}
-              </Link>
-            </p>
-          )}
-
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium">
-              <input
-                type="checkbox"
-                checked={form.is_active}
-                disabled={activeBlocked && !form.is_active}
-                aria-describedby="active-hint"
-                onChange={(e) => set('is_active', e.target.checked)}
-              />
-              {t('admin.form.active')}
-            </label>
-            <p id="active-hint" className="text-xs text-slate-600">
-              {activeBlocked ? t('admin.form.activeNeedsTier') : t('admin.form.activeHint')}
-            </p>
-            {errors.is_active && <p className="text-sm text-red-700">{errors.is_active}</p>}
+            {(noBrands || noCategories) && (
+              <p className="text-sm text-amber">
+                {t('admin.form.createRefsFirst')}{' '}
+                <Link to="/admin/brands" className="font-medium underline">
+                  {t('admin.brand.title')}
+                </Link>
+                {', '}
+                <Link to="/admin/categories" className="font-medium underline">
+                  {t('admin.category.title')}
+                </Link>
+              </p>
+            )}
           </div>
 
-          {formError !== null && <ErrorState message={errorText(t, formError)} />}
-        </section>
-
-        {!product && <TierDraftSection drafts={drafts} onChange={setDrafts} errors={tierErrors} />}
-
-        <div className="flex flex-wrap gap-2">
-          <button type="submit" className="btn btn-primary" disabled={saving}>
-            {saving
-              ? t('common.saving')
-              : product
-                ? t('admin.form.saveChanges')
-                : t('admin.form.createButton')}
-          </button>
-          {product && (
-            <button type="button" className="btn btn-danger" onClick={() => setConfirmDelete(true)}>
-              {t('admin.form.deleteProduct')}
+          <div className="space-y-3 border-t border-line pt-5">
+            <p aria-live="polite" className={`text-sm ${dirty ? 'font-medium text-amber' : 'text-muted'}`}>
+              {dirty ? t('admin.form.unsaved') : product ? t('admin.form.allSaved') : ''}
+            </p>
+            <button
+              type="button"
+              className="btn btn-primary w-full"
+              disabled={saving}
+              onClick={() => void submit()}
+            >
+              {saving
+                ? t('common.saving')
+                : product
+                  ? t('admin.form.saveChanges')
+                  : t('admin.form.createButton')}
             </button>
+            {product && (
+              <button
+                type="button"
+                className="btn btn-danger w-full"
+                onClick={() => setConfirmDelete(true)}
+              >
+                {t('admin.form.deleteProduct')}
+              </button>
+            )}
+          </div>
+        </aside>
+
+        {/* Bundles and images are saved on their own, straight away. */}
+        <div className="space-y-12 lg:col-start-1">
+          {product ? (
+            <>
+              <TierSection productId={product.id} tiers={product.tiers} onChanged={onSaved} />
+              <ImageSection productId={product.id} images={product.images} onChanged={onSaved} />
+            </>
+          ) : (
+            <>
+              <TierDraftSection drafts={drafts} onChange={setDrafts} errors={tierErrors} />
+              <p className="rounded-lg border border-dashed border-line bg-surface px-4 py-3 text-sm text-muted">
+                {t('admin.images.saveFirst')}
+              </p>
+            </>
           )}
         </div>
-      </form>
-
-      {product ? (
-        <>
-          <TierSection productId={product.id} tiers={product.tiers} onChanged={onSaved} />
-          <ImageSection productId={product.id} images={product.images} onChanged={onSaved} />
-        </>
-      ) : (
-        <p className="text-sm text-slate-600">{t('admin.images.saveFirst')}</p>
-      )}
+      </div>
 
       <ConfirmDialog
         open={confirmDelete}
@@ -375,7 +425,7 @@ function SelectField({
   error?: string
 }) {
   return (
-    <label className="block space-y-1 text-sm font-medium">
+    <label className="block space-y-1.5 text-sm font-medium">
       <span>{label}</span>
       <select
         className="input"
@@ -390,7 +440,7 @@ function SelectField({
           </option>
         ))}
       </select>
-      {error && <span className="block text-sm font-normal text-red-700">{error}</span>}
+      {error && <span className="block text-sm font-normal text-danger">{error}</span>}
     </label>
   )
 }

@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, expect, test, vi } from 'vitest'
+import { expect, test } from 'vitest'
 import {
   apiError,
   asAdmin,
@@ -12,8 +12,6 @@ import {
   refRoutes,
   renderApp,
 } from './helpers'
-
-afterEach(() => vi.unstubAllGlobals())
 
 const LIST = 'GET /api/v1/admin/products'
 
@@ -40,7 +38,8 @@ test('lists products with status, tier and missing-Arabic markers', async () => 
   const rows = await screen.findAllByRole('listitem')
   const first = within(rows[0])
   expect(first.getByText('Sterile Gauze Pads')).toBeInTheDocument()
-  expect(first.getByText('Nova Health · Wound Care')).toBeInTheDocument()
+  expect(first.getByText('Nova Health')).toBeInTheDocument()
+  expect(first.getByText('Wound Care')).toBeInTheDocument()
   expect(first.getByText('Active')).toBeInTheDocument()
   expect(first.getByText('Tiers: 1')).toBeInTheDocument()
   expect(first.queryByText('No Arabic name')).not.toBeInTheDocument()

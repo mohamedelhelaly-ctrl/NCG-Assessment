@@ -1,9 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, expect, test, vi } from 'vitest'
+import { expect, test } from 'vitest'
 import { asAdmin, apiError, bodyOf, callsTo, json, mockApi, named, renderApp } from './helpers'
-
-afterEach(() => vi.unstubAllGlobals())
 
 const BRANDS = 'GET /api/v1/admin/brands'
 

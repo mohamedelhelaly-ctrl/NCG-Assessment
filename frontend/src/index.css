@@ -1,45 +1,133 @@
 @import 'tailwindcss';
 
+/* Design tokens. Pharmacy green is the one strong colour; everything else is quiet. */
+@theme {
+  --color-paper: #f4f7f5;
+  --color-surface: #ffffff;
+  --color-ink: #1c2a25;
+  --color-muted: #55645e;
+  --color-line: #d5ded9;
+  --color-primary: #15634f;
+  --color-primary-strong: #0e4a3b;
+  --color-primary-soft: #e1f0ea;
+  --color-amber: #8a5700;
+  --color-amber-soft: #fbefd5;
+  --color-danger: #b3261e;
+  --color-danger-soft: #fce8e6;
+  /* One designed family for both scripts, so mixed Arabic and English lines sit evenly. */
+  --font-sans: 'IBM Plex Sans', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+}
+
 @layer base {
-  body {
-    margin: 0;
+  html {
+    -webkit-text-size-adjust: 100%;
   }
-  /* Arabic script needs a font that supports it; Latin keeps the system font. */
-  :root[lang='ar'] body {
-    font-family: 'Noto Sans Arabic Variable', system-ui, sans-serif;
+  body {
+    @apply bg-paper font-sans text-ink antialiased;
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.55;
   }
   :focus-visible {
-    outline: 2px solid #1d4ed8;
+    outline: 2px solid var(--color-primary);
     outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition: none !important;
+      animation: none !important;
+    }
   }
 }
 
 @layer components {
+  /* ---- buttons: one primary per area, everything else quiet ---- */
   .btn {
-    @apply inline-flex items-center justify-center rounded border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex h-10 items-center justify-center gap-2 rounded-md border border-line bg-surface px-3.5 text-sm font-medium text-ink transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-primary {
-    @apply border-slate-900 bg-slate-900 text-white hover:bg-slate-800;
+    @apply border-primary bg-primary text-white hover:border-primary-strong hover:bg-primary-strong hover:text-white;
   }
   .btn-danger {
-    @apply border-red-700 text-red-700 hover:bg-red-50;
+    @apply text-danger hover:border-danger hover:bg-danger-soft hover:text-danger;
   }
   .btn-danger-solid {
-    @apply border-red-700 bg-red-700 text-white hover:bg-red-800;
+    @apply border-danger bg-danger text-white hover:border-danger hover:bg-danger hover:text-white hover:opacity-90;
+  }
+  .btn-quiet {
+    @apply border-transparent bg-transparent hover:border-transparent hover:bg-primary-soft;
   }
   .btn-sm {
-    @apply px-2 py-1 text-xs;
+    @apply h-8 px-2.5 text-xs;
   }
+
+  /* ---- form controls ---- */
   .input {
-    @apply w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm;
+    @apply block h-10 w-full rounded-md border border-line bg-surface px-3 text-[15px] text-ink placeholder:text-muted/60 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25 disabled:bg-paper disabled:text-muted;
+  }
+  textarea.input {
+    height: auto;
+    padding-block: 0.6rem;
+    line-height: 1.5;
+    resize: vertical;
   }
   .input[aria-invalid='true'] {
-    @apply border-red-600;
+    @apply border-danger focus:border-danger focus:ring-danger/20;
   }
-  .card {
-    @apply rounded-lg border border-slate-200 bg-white;
+  .switch {
+    appearance: none;
+    position: relative;
+    flex: none;
+    width: 2.6rem;
+    height: 1.55rem;
+    border-radius: 999px;
+    background: var(--color-line);
+    cursor: pointer;
+    transition: background-color 0.15s;
   }
+  .switch::after {
+    content: '';
+    position: absolute;
+    inset-block-start: 0.2rem;
+    inset-inline-start: 0.2rem;
+    width: 1.15rem;
+    height: 1.15rem;
+    border-radius: 999px;
+    background: #fff;
+    transition: transform 0.15s;
+  }
+  .switch:checked {
+    background: var(--color-primary);
+  }
+  .switch:checked::after {
+    transform: translateX(1.05rem);
+  }
+  [dir='rtl'] .switch:checked::after {
+    transform: translateX(-1.05rem);
+  }
+  .switch:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* ---- status badges ---- */
   .badge {
-    @apply inline-block rounded-full border px-2 py-0.5 text-xs;
+    @apply inline-flex items-center rounded px-2 py-0.5 text-xs font-medium;
+  }
+  .badge-ok {
+    @apply bg-primary-soft text-primary-strong;
+  }
+  .badge-muted {
+    @apply bg-line/60 text-muted;
+  }
+  .badge-warn {
+    @apply bg-amber-soft text-amber;
+  }
+
+  /* ---- bordered record list: tier rows, image rows ---- */
+  .records {
+    @apply divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface;
   }
 }

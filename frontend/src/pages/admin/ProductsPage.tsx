@@ -94,9 +94,9 @@ export default function ProductsPage() {
   const data = products.data
 
   return (
-    <section className="space-y-4" aria-labelledby="products-heading">
+    <section className="space-y-5" aria-labelledby="products-heading">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="products-heading" className="text-xl font-semibold">
+        <h2 id="products-heading" className="text-2xl font-semibold">
           {t('admin.products.title')}
         </h2>
         <Link to="/admin/products/new" className="btn btn-primary">
@@ -108,7 +108,7 @@ export default function ProductsPage() {
         role="search"
         aria-label={t('admin.products.filters')}
         onSubmit={(e) => e.preventDefault()}
-        className="card grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4"
+        className="grid gap-4 border-b border-line pb-5 sm:grid-cols-2 lg:grid-cols-4"
       >
         <Field
           label={t('common.search')}
@@ -144,9 +144,10 @@ export default function ProductsPage() {
           }))}
           allLabel={t('admin.products.statuses.all')}
         />
-        <label className="flex items-center gap-2 text-sm sm:col-span-2">
+        <label className="flex items-center gap-2.5 text-sm sm:col-span-2">
           <input
             type="checkbox"
+            className="size-4 accent-primary"
             checked={missingAr}
             onChange={(e) => setFilter('missing_ar', e.target.checked ? 'true' : '')}
           />
@@ -176,7 +177,7 @@ export default function ProductsPage() {
 
       {data && (
         <>
-          <p className="text-sm text-slate-600" aria-live="polite">
+          <p className="text-sm text-muted" aria-live="polite">
             {t('common.results', { count: data.total })}
           </p>
           {data.items.length === 0 ? (
@@ -184,44 +185,43 @@ export default function ProductsPage() {
               {filtered ? t('admin.products.emptyFiltered') : t('admin.products.empty')}
             </EmptyState>
           ) : (
-            <ul className="divide-y divide-slate-200 rounded-lg border border-slate-200">
+            <ul className="records">
               {data.items.map((p) => (
-                <li key={p.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
+                <li key={p.id} className="flex flex-wrap items-center gap-x-4 gap-y-3 p-4">
                   {p.main_image_url ? (
                     <img
                       src={p.main_image_url}
                       alt=""
-                      className="h-14 w-14 shrink-0 rounded object-cover"
+                      className="size-16 shrink-0 rounded-md object-cover"
                     />
                   ) : (
-                    <div className="h-14 w-14 shrink-0 rounded bg-slate-100" aria-hidden="true" />
+                    <div className="size-16 shrink-0 rounded-md bg-paper" aria-hidden="true" />
                   )}
                   <div className="min-w-0 flex-1 basis-48">
-                    <Link to={`/admin/products/${p.id}`} className="font-medium underline">
+                    <Link to={`/admin/products/${p.id}`} className="font-semibold hover:text-primary hover:underline">
                       {p.display_name}
                     </Link>
-                    <p className="text-xs text-slate-600">
-                      {p.brand} · {p.category}
+                    <p className="mt-0.5 flex flex-wrap text-sm text-muted">
+                      <span>{p.brand}</span>
+                      <span className="ms-2.5 border-s border-line ps-2.5">{p.category}</span>
                     </p>
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      <span
-                        className={`badge ${p.is_active ? 'border-green-600 text-green-700' : 'border-slate-400 text-slate-600'}`}
-                      >
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      <span className={`badge ${p.is_active ? 'badge-ok' : 'badge-muted'}`}>
                         {p.is_active ? t('admin.products.active') : t('admin.products.inactive')}
                       </span>
                       {p.tier_count === 0 && (
-                        <span className="badge border-amber-600 text-amber-700">
-                          {t('admin.products.noTiers')}
-                        </span>
+                        <span className="badge badge-warn">{t('admin.products.noTiers')}</span>
                       )}
                       {p.missing_ar && (
-                        <span className="badge border-blue-600 text-blue-700">
+                        <span className="badge bg-surface text-muted ring-1 ring-line">
                           {t('admin.products.missingAr')}
                         </span>
                       )}
                     </div>
                   </div>
-                  <span className="text-sm">{t('admin.products.tierCount', { count: p.tier_count })}</span>
+                  <span className="text-sm tabular-nums text-muted">
+                    {t('admin.products.tierCount', { count: p.tier_count })}
+                  </span>
                   <Link to={`/admin/products/${p.id}`} className="btn btn-sm">
                     {t('common.edit')}
                   </Link>
@@ -277,7 +277,7 @@ function Select({
   allLabel: string
 }) {
   return (
-    <label className="block space-y-1 text-sm font-medium">
+    <label className="block space-y-1.5 text-sm font-medium">
       <span>{label}</span>
       <select className="input" value={value} onChange={(e) => onChange(e.target.value)}>
         <option value="">{allLabel}</option>

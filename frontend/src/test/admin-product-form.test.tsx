@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, expect, test, vi } from 'vitest'
+import { expect, test } from 'vitest'
 import {
   apiError,
   asAdmin,
@@ -12,8 +12,6 @@ import {
   refRoutes,
   renderApp,
 } from './helpers'
-
-afterEach(() => vi.unstubAllGlobals())
 
 const detail = (over = {}) => ({ 'GET /api/v1/admin/products/7': json(productDetail(over)) })
 
@@ -71,7 +69,7 @@ test('creating a product with tiers sends prices as integer fils and opens the e
   await userEvent.type(screen.getByLabelText('Name (Arabic, optional)'), 'فيتامين سي')
   await userEvent.click(screen.getByRole('button', { name: 'Add tier' }))
   const tier = screen.getByRole('group', { name: 'Tier 1' })
-  await userEvent.type(within(tier).getByLabelText('Label (English), for example 4 packs'), '4 packs')
+  await userEvent.type(within(tier).getByLabelText('Label (English)'), '4 packs')
   await userEvent.type(within(tier).getByLabelText('Packs per bundle'), '4')
   await userEvent.type(within(tier).getByLabelText('Bundle price (KWD)'), '19.5')
   await userEvent.click(screen.getByLabelText('Active (visible in the store)'))
@@ -97,7 +95,7 @@ test('invalid tier values are explained and nothing is sent', async () => {
   await fillBasics()
   await userEvent.click(screen.getByRole('button', { name: 'Add tier' }))
   const tier = screen.getByRole('group', { name: 'Tier 1' })
-  await userEvent.type(within(tier).getByLabelText('Label (English), for example 4 packs'), 'x')
+  await userEvent.type(within(tier).getByLabelText('Label (English)'), 'x')
   await userEvent.type(within(tier).getByLabelText('Packs per bundle'), '0')
   await userEvent.type(within(tier).getByLabelText('Bundle price (KWD)'), '19.5555')
   await userEvent.click(screen.getByRole('button', { name: 'Create product' }))
@@ -115,7 +113,7 @@ test('two new tiers with the same number of packs are rejected', async () => {
   }
   for (const name of ['Tier 1', 'Tier 2']) {
     const tier = screen.getByRole('group', { name })
-    await userEvent.type(within(tier).getByLabelText('Label (English), for example 4 packs'), name)
+    await userEvent.type(within(tier).getByLabelText('Label (English)'), name)
     await userEvent.type(within(tier).getByLabelText('Packs per bundle'), '4')
     await userEvent.type(within(tier).getByLabelText('Bundle price (KWD)'), '19.500')
   }
@@ -286,7 +284,7 @@ test('adding a tier posts it and clears the row', async () => {
   )
   renderApp('/admin/products/7')
   const row = await screen.findByRole('group', { name: 'New tier' })
-  await userEvent.type(within(row).getByLabelText('Label (English), for example 4 packs'), '12 packs')
+  await userEvent.type(within(row).getByLabelText('Label (English)'), '12 packs')
   await userEvent.type(within(row).getByLabelText('Packs per bundle'), '12')
   await userEvent.type(within(row).getByLabelText('Bundle price (KWD)'), '55')
   await userEvent.click(within(row).getByRole('button', { name: 'Add this tier' }))
@@ -338,7 +336,7 @@ test('unsaved edits to the main form survive adding a tier', async () => {
   const name = await screen.findByLabelText('Name (English)')
   await userEvent.type(name, ' EDITED')
   const row = screen.getByRole('group', { name: 'New tier' })
-  await userEvent.type(within(row).getByLabelText('Label (English), for example 4 packs'), '12 packs')
+  await userEvent.type(within(row).getByLabelText('Label (English)'), '12 packs')
   await userEvent.type(within(row).getByLabelText('Packs per bundle'), '12')
   await userEvent.type(within(row).getByLabelText('Bundle price (KWD)'), '55')
   await userEvent.click(within(row).getByRole('button', { name: 'Add this tier' }))

@@ -1,8 +1,6 @@
 import { render, screen } from '@testing-library/react'
-import { afterEach, expect, test, vi } from 'vitest'
+import { expect, test, vi } from 'vitest'
 import StatusPage from './StatusPage'
-
-afterEach(() => vi.unstubAllGlobals())
 
 test('shows success when the API answers', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ status: 'ok' }))))

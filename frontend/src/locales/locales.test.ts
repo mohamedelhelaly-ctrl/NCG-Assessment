@@ -36,7 +36,8 @@ test('every placeholder in English is used in Arabic, and the other way round', 
 })
 
 test('Arabic strings are really Arabic, except for the allowed Latin ones', () => {
-  const allowedLatin = new Set(['nav.switchLanguage']) // the switcher names the other language
+  // The switcher names the other language; the tier label example is English input guidance.
+  const allowedLatin = new Set(['nav.switchLanguage', 'admin.tiers.labelExample'])
   for (const [key, value] of Object.entries(arabic)) {
     if (allowedLatin.has(key)) continue
     expect(value, key).toMatch(/[؀-ۿ]/)

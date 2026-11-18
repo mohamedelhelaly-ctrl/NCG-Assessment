@@ -1,12 +1,7 @@
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, expect, test, vi } from 'vitest'
+import { expect, test } from 'vitest'
 import { admin, customer, healthy, mockApi, renderApp, tokenFor } from './helpers'
-
-afterEach(() => {
-  vi.unstubAllGlobals()
-  localStorage.clear()
-})
 
 test('a guest is sent from /admin to the sign-in page', async () => {
   mockApi(healthy)

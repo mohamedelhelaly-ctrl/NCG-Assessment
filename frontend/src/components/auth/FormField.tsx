@@ -8,7 +8,7 @@ interface Props extends InputHTMLAttributes<HTMLInputElement> {
 export default function FormField({ label, error, id, ...input }: Props) {
   const fieldId = id ?? input.name
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       <label htmlFor={fieldId} className="block text-sm font-medium">
         {label}
       </label>
@@ -20,7 +20,7 @@ export default function FormField({ label, error, id, ...input }: Props) {
         {...input}
       />
       {error && (
-        <p id={`${fieldId}-error`} className="text-sm text-red-700">
+        <p id={`${fieldId}-error`} className="text-sm text-danger">
           {error}
         </p>
       )}

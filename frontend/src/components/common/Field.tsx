@@ -6,6 +6,7 @@ interface Props {
   onChange: (value: string) => void
   error?: string
   hint?: string
+  placeholder?: string
   multiline?: boolean
   rows?: number
   dir?: 'ltr' | 'rtl'
@@ -17,6 +18,8 @@ interface Props {
   disabled?: boolean
   autoComplete?: string
   name?: string
+  /** Extra classes for the label, for example "lg:sr-only" to hide it where a column header exists. */
+  labelClassName?: string
 }
 
 /** A labelled controlled input. The label, hint and error are all tied to the input for screen readers. */
@@ -26,6 +29,7 @@ export default function Field({
   onChange,
   error,
   hint,
+  placeholder,
   multiline,
   rows = 4,
   dir,
@@ -37,6 +41,7 @@ export default function Field({
   disabled,
   autoComplete,
   name,
+  labelClassName = '',
 }: Props) {
   const id = useId()
   const describedBy = [hint ? `${id}-hint` : null, error ? `${id}-error` : null]
@@ -51,6 +56,7 @@ export default function Field({
     maxLength,
     required,
     disabled,
+    placeholder,
     className: 'input',
     'aria-invalid': error ? true : undefined,
     'aria-describedby': describedBy || undefined,
@@ -58,8 +64,8 @@ export default function Field({
       onChange(e.target.value),
   }
   return (
-    <div className="space-y-1">
-      <label htmlFor={id} className="block text-sm font-medium">
+    <div className="min-w-0 space-y-1.5">
+      <label htmlFor={id} className={`block text-sm font-medium ${labelClassName}`}>
         {label}
       </label>
       {multiline ? (
@@ -68,12 +74,12 @@ export default function Field({
         <input type={type} inputMode={inputMode} autoComplete={autoComplete} {...shared} />
       )}
       {hint && (
-        <p id={`${id}-hint`} className="text-xs text-slate-600">
+        <p id={`${id}-hint`} className="text-xs text-muted">
           {hint}
         </p>
       )}
       {error && (
-        <p id={`${id}-error`} className="text-sm text-red-700">
+        <p id={`${id}-error`} className="text-sm text-danger">
           {error}
         </p>
       )}

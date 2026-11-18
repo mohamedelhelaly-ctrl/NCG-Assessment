@@ -1,12 +1,10 @@
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, expect, test, vi } from 'vitest'
+import { expect, test, vi } from 'vitest'
 import { api, ApiError } from '../lib/api'
 import { errorText } from '../lib/errors'
 import i18n from '../lib/i18n'
 import { admin, apiError, healthy, mockApi, refRoutes, json, page, renderApp } from './helpers'
-
-afterEach(() => vi.unstubAllGlobals())
 
 const html = document.documentElement
 

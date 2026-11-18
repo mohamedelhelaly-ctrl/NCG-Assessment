@@ -91,9 +91,9 @@ export default function NamedPage({ kind }: { kind: Kind }) {
   }
 
   return (
-    <section className="space-y-4" aria-labelledby={`${kind}-heading`}>
+    <section className="space-y-5" aria-labelledby={`${kind}-heading`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id={`${kind}-heading`} className="text-xl font-semibold">
+        <h2 id={`${kind}-heading`} className="text-2xl font-semibold">
           {t(`admin.${kind}.title`)}
         </h2>
         <button type="button" className="btn btn-primary" onClick={() => open('new')}>
@@ -105,13 +105,19 @@ export default function NamedPage({ kind }: { kind: Kind }) {
       {pageError !== null && <ErrorState message={errorText(t, pageError)} />}
 
       {editing && (
-        <form onSubmit={onSubmit} noValidate className="card space-y-3 p-4">
-          <h3 className="font-medium">
+        <form
+          onSubmit={onSubmit}
+          noValidate
+          className="space-y-4 rounded-lg border border-line bg-surface p-5"
+        >
+          <h3 className="text-lg font-semibold">
             {editing === 'new' ? t(`admin.${kind}.new`) : t(`admin.${kind}.edit`)}
           </h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <Field
               label={t('admin.form.nameEn')}
+dir="ltr"
+lang="en"
               value={name}
               onChange={setName}
               error={errors.name}
@@ -130,7 +136,7 @@ export default function NamedPage({ kind }: { kind: Kind }) {
             />
           </div>
           {formError !== null && (
-            <p role="alert" className="text-sm text-red-700">
+            <p role="alert" className="text-sm text-danger">
               {errorText(t, formError)}
             </p>
           )}
@@ -151,16 +157,18 @@ export default function NamedPage({ kind }: { kind: Kind }) {
       )}
       {list.data && list.data.length === 0 && <EmptyState>{t(`admin.${kind}.empty`)}</EmptyState>}
       {list.data && list.data.length > 0 && (
-        <ul className="divide-y divide-slate-200 rounded-lg border border-slate-200">
+        <ul className="records">
           {list.data.map((item) => (
-            <li key={item.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
+            <li key={item.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 p-4">
               <div className="min-w-0 flex-1">
-                <p className="font-medium">{item.display_name}</p>
-                <p className="text-xs text-slate-600">
+                <p className="font-semibold">{item.display_name}</p>
+                <p className="text-sm text-muted">
                   {item.name_ar ? `${item.name} / ${item.name_ar}` : t('admin.form.noArabic')}
                 </p>
               </div>
-              <span className="text-sm">{t('admin.productCount', { count: item.product_count })}</span>
+              <span className="text-sm tabular-nums text-muted">
+                {t('admin.productCount', { count: item.product_count })}
+              </span>
               <button type="button" className="btn btn-sm" onClick={() => open(item)}>
                 {t('common.edit')}
               </button>

@@ -22,11 +22,11 @@ export default function StatusPage() {
   }, [])
 
   return (
-    <main className="mx-auto max-w-xl p-6">
-      <h1 className="text-2xl font-semibold">{t('app.name')}</h1>
+    <main className="mx-auto max-w-3xl px-4 py-12">
+      <h1 className="mb-2 text-3xl font-semibold">{t('app.name')}</h1>
       {state.kind === 'loading' && <p role="status">{t('status.checking')}</p>}
       {state.kind === 'ok' && <p role="status">{t('status.reachable')}</p>}
-      {state.kind === 'error' && <p role="alert">{t('status.unreachable', { message: state.message })}</p>}
+      {state.kind === 'error' && <p role="alert" className="text-danger">{t('status.unreachable', { message: state.message })}</p>}
     </main>
   )
 }

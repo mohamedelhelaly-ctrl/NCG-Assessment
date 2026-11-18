@@ -44,21 +44,21 @@ export default function ConfirmDialog({
 
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 p-4">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="confirm-title"
         aria-describedby="confirm-body"
-        className="card w-full max-w-md space-y-3 p-5 shadow-lg"
+        className="w-full max-w-md space-y-3 rounded-xl bg-surface p-6 shadow-2xl"
       >
         <h2 id="confirm-title" className="text-lg font-semibold">
           {title}
         </h2>
-        <p id="confirm-body" className="text-sm text-slate-700">
+        <p id="confirm-body" className="text-sm text-muted">
           {body}
         </p>
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-2 pt-2">
           <button ref={cancelRef} type="button" className="btn" onClick={onCancel} disabled={busy}>
             {t('common.cancel')}
           </button>

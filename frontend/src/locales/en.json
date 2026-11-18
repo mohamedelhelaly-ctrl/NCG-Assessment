@@ -56,7 +56,13 @@
     "creating": "Creating…",
     "registerButton": "Create account",
     "haveAccount": "Already registered?",
-    "signInLink": "Sign in"
+    "signInLink": "Sign in",
+    "tagline": "Medical supplies, sold by the pack and by the bundle.",
+    "ladder": {
+      "one": "1 pack",
+      "four": "4 packs",
+      "twelve": "12 packs"
+    }
   },
   "notFound": {
     "title": "Page not found",
@@ -163,14 +169,20 @@
       "createButton": "Create product",
       "saveChanges": "Save changes",
       "deleteProduct": "Delete product",
-      "created": "Product created. You can now add images."
+      "created": "Product created. You can now add images.",
+      "unsaved": "Unsaved changes",
+      "allSaved": "All changes saved",
+      "sectionContent": "Content",
+      "sectionSale": "Where it sells",
+      "name": "Name",
+      "description": "Description"
     },
     "tiers": {
       "title": "Pricing tiers",
       "createHint": "Each tier is one bundle: a number of packs sold together for one price.",
       "rowLabel": "Tier {{number}}",
       "newRow": "New tier",
-      "labelEn": "Label (English), for example 4 packs",
+      "labelEn": "Label (English)",
       "labelAr": "Label (Arabic, optional)",
       "units": "Packs per bundle",
       "price": "Bundle price (KWD)",
@@ -182,7 +194,11 @@
       "empty": "No tiers yet. The product stays hidden from the store until it has at least one.",
       "deactivated": "Tier deleted. The product was set to inactive because it has no tiers left.",
       "deleteTitle": "Delete this tier?",
-      "deleteBody": "“{{name}}” will be permanently deleted."
+      "deleteBody": "“{{name}}” will be permanently deleted.",
+      "labelExample": "e.g. 4 packs",
+      "perPack": "Per pack",
+      "perPackValue": "{{price}} per pack",
+      "intro": "Each tier is a bundle: some packs sold together for one total price. Arabic labels are optional; if empty, the English label is shown in the Arabic view."
     },
     "images": {
       "title": "Images",
@@ -202,7 +218,8 @@
       "saveAlt": "Save text",
       "deleteTitle": "Delete this image?",
       "deleteBody": "The image will be permanently deleted.",
-      "saveFirst": "Save the product first, then you can add images."
+      "saveFirst": "Save the product first, then you can add images.",
+      "noFile": "No file chosen"
     }
   }
 }

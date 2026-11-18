@@ -21,20 +21,25 @@ interface Props {
 export default function TierSection({ productId, tiers, onChanged }: Props) {
   const { t, i18n } = useTranslation()
   return (
-    <section aria-labelledby="tiers-heading" className="space-y-3">
-      <h3 id="tiers-heading" className="text-lg font-semibold">
-        {t('admin.tiers.title')}
-      </h3>
+    <section aria-labelledby="tiers-heading" className="space-y-4">
+      <div>
+        <h3 id="tiers-heading" className="text-lg font-semibold">
+          {t('admin.tiers.title')}
+        </h3>
+        <p className="mt-1 max-w-prose text-sm text-muted">{t('admin.tiers.intro')}</p>
+      </div>
       {tiers.length === 0 && <EmptyState>{t('admin.tiers.empty')}</EmptyState>}
-      {tiers.map((tier) => (
-        <TierRow
-          key={tier.id}
-          tier={tier}
-          summary={`${tier.label} · ${formatKwd(tier.price_fils, i18n.language)}`}
-          onChanged={onChanged}
-        />
-      ))}
-      <NewTierRow productId={productId} onChanged={onChanged} />
+      <div className="records">
+        {tiers.map((tier) => (
+          <TierRow
+            key={tier.id}
+            tier={tier}
+            summary={`${tier.label} · ${formatKwd(tier.price_fils, i18n.language)}`}
+            onChanged={onChanged}
+          />
+        ))}
+        <NewTierRow productId={productId} onChanged={onChanged} />
+      </div>
     </section>
   )
 }
@@ -108,30 +113,37 @@ function TierRow({
   }
 
   return (
-    <div role="group" aria-label={summary} className="card space-y-2 p-4">
-      <p className="text-sm font-medium">{summary}</p>
-      <TierFields draft={draft} onChange={setDraft} errors={errors} disabled={busy} />
+    <div role="group" aria-label={summary} className="space-y-3 p-4">
+      <TierFields
+        draft={draft}
+        fallbackTitle={tier.label}
+        onChange={setDraft}
+        errors={errors}
+        disabled={busy}
+        actions={
+          <>
+            <button
+              type="button"
+              className="btn btn-sm btn-primary"
+              disabled={busy}
+              onClick={async () => {
+                if (await save()) onChanged(t('common.saved'))
+              }}
+            >
+              {busy ? t('common.saving') : t('admin.tiers.saveRow')}
+            </button>
+            <button
+              type="button"
+              className="btn btn-sm btn-danger"
+              onClick={() => setConfirming(true)}
+            >
+              {t('common.delete')}
+            </button>
+          </>
+        }
+      />
       {rowError !== null && <ErrorState message={errorText(t, rowError)} />}
       {deleteError !== null && <ErrorState message={errorText(t, deleteError)} />}
-      <div className="flex gap-2">
-        <button
-          type="button"
-          className="btn btn-sm btn-primary"
-          disabled={busy}
-          onClick={async () => {
-            if (await save()) onChanged(t('common.saved'))
-          }}
-        >
-          {busy ? t('common.saving') : t('admin.tiers.saveRow')}
-        </button>
-        <button
-          type="button"
-          className="btn btn-sm btn-danger"
-          onClick={() => setConfirming(true)}
-        >
-          {t('common.delete')}
-        </button>
-      </div>
       <ConfirmDialog
         open={confirming}
         title={t('admin.tiers.deleteTitle')}
@@ -159,24 +171,31 @@ function NewTierRow({
   })
 
   return (
-    <div role="group" aria-label={t('admin.tiers.newRow')} className="card space-y-2 border-dashed p-4">
-      <p className="text-sm font-medium">{t('admin.tiers.newRow')}</p>
-      <TierFields draft={draft} onChange={setDraft} errors={errors} disabled={busy} />
-      {rowError !== null && <ErrorState message={errorText(t, rowError)} />}
-      <button
-        type="button"
-        className="btn btn-sm btn-primary"
+    <div role="group" aria-label={t('admin.tiers.newRow')} className="space-y-3 bg-paper p-4">
+      <TierFields
+        draft={draft}
+        fallbackTitle={t('admin.tiers.newRow')}
+        onChange={setDraft}
+        errors={errors}
         disabled={busy}
-        onClick={async () => {
-          if (await save()) {
-            setDraft(emptyDraft())
-            clearErrors()
-            onChanged(t('admin.tiers.added'))
-          }
-        }}
-      >
-        {busy ? t('common.saving') : t('admin.tiers.addButton')}
-      </button>
+        actions={
+          <button
+            type="button"
+            className="btn btn-sm btn-primary"
+            disabled={busy}
+            onClick={async () => {
+              if (await save()) {
+                setDraft(emptyDraft())
+                clearErrors()
+                onChanged(t('admin.tiers.added'))
+              }
+            }}
+          >
+            {busy ? t('common.saving') : t('admin.tiers.addButton')}
+          </button>
+        }
+      />
+      {rowError !== null && <ErrorState message={errorText(t, rowError)} />}
     </div>
   )
 }
