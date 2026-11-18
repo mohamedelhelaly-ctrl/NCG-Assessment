@@ -8,6 +8,7 @@ import '@fontsource/ibm-plex-sans-arabic/arabic-400.css'
 import '@fontsource/ibm-plex-sans-arabic/arabic-500.css'
 import '@fontsource/ibm-plex-sans-arabic/arabic-600.css'
 import App from './App'
+import ErrorBoundary from './components/ui/ErrorBoundary'
 import { AuthProvider } from './lib/auth'
 import { CartProvider } from './lib/cart'
 import './lib/i18n'
@@ -15,6 +16,7 @@ import './index.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
+    <ErrorBoundary>
     <BrowserRouter>
       <AuthProvider>
         <CartProvider>
@@ -22,5 +24,6 @@ createRoot(document.getElementById('root')!).render(
         </CartProvider>
       </AuthProvider>
     </BrowserRouter>
+    </ErrorBoundary>
   </StrictMode>,
 )

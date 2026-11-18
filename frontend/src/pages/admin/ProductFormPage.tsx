@@ -221,7 +221,7 @@ function ProductForm({
 
   return (
     <div className="space-y-8">
-      <header className="space-y-1.5">
+      <div className="space-y-1.5">
         <Link to="/admin/products" className="text-sm text-muted hover:text-primary">
           {t('admin.form.backToList')}
         </Link>
@@ -234,7 +234,7 @@ function ProductForm({
           </p>
         )}
         {flash && <Notice>{flash}</Notice>}
-      </header>
+      </div>
 
       <div className="grid gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_19rem]">
         {/* Content: each field is written once in English and, optionally, in Arabic. */}

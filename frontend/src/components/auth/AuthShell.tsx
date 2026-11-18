@@ -13,9 +13,9 @@ export default function AuthShell({ children }: { children: ReactNode }) {
           <BundleLadder />
         </div>
       </aside>
-      <main className="flex items-start justify-center px-4 py-10 sm:px-8 lg:items-center lg:py-16">
+      <div className="flex items-start justify-center px-4 py-10 sm:px-8 lg:items-center lg:py-16">
         <div className="w-full max-w-sm">{children}</div>
-      </main>
+      </div>
     </div>
   )
 }

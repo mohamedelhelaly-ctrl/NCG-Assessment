@@ -83,3 +83,7 @@ class CartReplaceIn(BaseModel):
 class CartMergeIn(BaseModel):
     # Guest carts could contain the same offer twice; merging adds them together.
     lines: list[CartLineIn] = Field(default_factory=list, max_length=MAX_LINES)
+    # Identifies THIS guest cart. Sending the same id again returns the cart without merging twice.
+    merge_id: str | None = Field(
+        default=None, min_length=8, max_length=64, pattern=r"^[A-Za-z0-9-]+$"
+    )

@@ -48,4 +48,4 @@ async def merge_cart(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return {"lines": await cart_service.merge_cart(db, user, body.lines)}
+    return {"lines": await cart_service.merge_cart(db, user, body.lines, body.merge_id)}

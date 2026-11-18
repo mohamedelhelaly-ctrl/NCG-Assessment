@@ -1,6 +1,6 @@
 # Requirements Draft: Medical E-Commerce with Multi-Tier Pricing
 
-Status: DRAFT v2 (open questions answered, Arabic support added), awaiting review. IDs: **C** = customer, **A** = admin, **B** = business rule, **N** = non-functional, **D** = decision, **Q** = open question.
+Status: IMPLEMENTED (milestones M0 to M6). The one deliberate gap is C22's "repriced" notice, listed under known limitations in the README; everything else below is built and tested. IDs: **C** = customer, **A** = admin, **B** = business rule, **N** = non-functional, **D** = decision, **Q** = open question.
 
 Source: the assessment brief plus the decisions agreed in review (see section 8). Items marked *(added)* go beyond the brief on purpose.
 

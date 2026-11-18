@@ -23,12 +23,21 @@ async def replace_cart(db: AsyncSession, user: User, lines: list[CartLineIn]) ->
     return items
 
 
-async def merge_cart(db: AsyncSession, user: User, incoming: list[CartLineIn]) -> list[CartItem]:
+async def merge_cart(
+    db: AsyncSession, user: User, incoming: list[CartLineIn], merge_id: str | None = None
+) -> list[CartItem]:
     """Add a guest cart to the saved one, in one transaction. The same offer adds its bundles
-    together (never above 99), another offer becomes a new line. This is not idempotent: the
-    caller must clear its local cart once it succeeds."""
+    together (never above 99), another offer becomes a new line.
+
+    With a `merge_id` the merge is idempotent: if this exact merge already happened (the response
+    was lost and the browser retried), the cart is returned as it is. Without one it is not, and
+    the caller must clear its local cart once the merge succeeds."""
     cart = await cart_crud.lock(db, user.id)
-    by_tier = {item.tier_id: item for item in await cart_crud.items(db, cart.id)}
+    existing_items = await cart_crud.items(db, cart.id)
+    if merge_id is not None and cart.last_merge_id == merge_id:
+        await db.commit()  # nothing changed; this just releases the row lock
+        return existing_items
+    by_tier = {item.tier_id: item for item in existing_items}
     for line in incoming:
         existing = by_tier.get(line.tier_id)
         if existing is not None:
@@ -43,6 +52,8 @@ async def merge_cart(db: AsyncSession, user: User, incoming: list[CartLineIn]) -
         )
         db.add(item)
         by_tier[line.tier_id] = item
+    if merge_id is not None:
+        cart.last_merge_id = merge_id
     await db.flush()  # new lines get their ids, which keep the order stable
     await db.commit()
     return sorted(by_tier.values(), key=lambda item: item.id)

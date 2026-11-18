@@ -1,17 +1,21 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router'
-import AdminLayout from './components/admin/AdminLayout'
 import { GuestOnly, RequireAdmin } from './components/auth/guards'
 import Layout from './components/layout/Layout'
-import BrandsPage from './pages/admin/BrandsPage'
-import CategoriesPage from './pages/admin/CategoriesPage'
-import ProductFormPage from './pages/admin/ProductFormPage'
-import ProductsPage from './pages/admin/ProductsPage'
+import { LoadingState } from './components/ui/Feedback'
 import CartPage from './pages/CartPage'
 import LoginPage from './pages/LoginPage'
 import NotFoundPage from './pages/NotFoundPage'
-import RegisterPage from './pages/RegisterPage'
 import ProductPage from './pages/ProductPage'
+import RegisterPage from './pages/RegisterPage'
 import StorePage from './pages/StorePage'
+
+// The admin area is only for admins, so customers never download its code.
+const AdminLayout = lazy(() => import('./components/admin/AdminLayout'))
+const BrandsPage = lazy(() => import('./pages/admin/BrandsPage'))
+const CategoriesPage = lazy(() => import('./pages/admin/CategoriesPage'))
+const ProductFormPage = lazy(() => import('./pages/admin/ProductFormPage'))
+const ProductsPage = lazy(() => import('./pages/admin/ProductsPage'))
 
 export default function App() {
   return (
@@ -25,7 +29,14 @@ export default function App() {
           <Route path="/register" element={<RegisterPage />} />
         </Route>
         <Route element={<RequireAdmin />}>
-          <Route path="/admin" element={<AdminLayout />}>
+          <Route
+            path="/admin"
+            element={
+              <Suspense fallback={<LoadingState />}>
+                <AdminLayout />
+              </Suspense>
+            }
+          >
             <Route index element={<Navigate to="products" replace />} />
             <Route path="products" element={<ProductsPage />} />
             <Route path="products/new" element={<ProductFormPage />} />

@@ -1,5 +1,6 @@
+import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, NavLink, Outlet, useNavigate } from 'react-router'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../../lib/authContext'
 import { useCart } from '../../lib/cartContext'
 import LanguageSwitcher from './LanguageSwitcher'
@@ -20,19 +21,37 @@ export default function Layout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const cart = useCart()
+  const location = useLocation()
+  const content = useRef<HTMLElement>(null)
+  const lastPath = useRef(location.pathname)
+
+  // A new page starts at the top and moves keyboard and screen reader focus to the content.
+  // Only the path matters: changing a filter or search must not take focus away from the field.
+  useEffect(() => {
+    if (lastPath.current === location.pathname) return
+    lastPath.current = location.pathname
+    window.scrollTo(0, 0)
+    content.current?.focus({ preventScroll: true })
+  }, [location.pathname])
 
   return (
     <div className="min-h-screen">
+      <a
+        href="#content"
+        className="sr-only focus:not-sr-only focus:fixed focus:start-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-white"
+      >
+        {t('nav.skip')}
+      </a>
       <header className="border-b border-line bg-surface">
         <nav
           aria-label={t('nav.main')}
-          className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:gap-5"
+          className="mx-auto flex min-h-14 max-w-6xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-1.5 sm:gap-x-5"
         >
           <Link to="/" className="flex items-center gap-2.5 text-lg font-semibold">
             <Mark />
             {t('app.name')}
           </Link>
-          <div className="ms-auto flex items-center gap-1 text-sm sm:gap-3">
+          <div className="ms-auto flex flex-wrap items-center justify-end gap-x-1 gap-y-1 text-sm sm:gap-x-3">
             {user?.role === 'admin' && (
               <NavLink
                 to="/admin"
@@ -82,7 +101,9 @@ export default function Layout() {
           </div>
         </nav>
       </header>
-      <Outlet />
+      <main id="content" ref={content} tabIndex={-1} className="outline-none">
+        <Outlet />
+      </main>
     </div>
   )
 }

@@ -27,25 +27,54 @@ function isLine(value: unknown): value is CartLine {
 }
 
 // Storage can be empty, blocked or corrupted; the cart must still work (and start empty).
-function readLocal(): CartLine[] {
+function readLocalCart(): { lines: CartLine[]; mergeId: string | null } {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return []
-    const lines = (JSON.parse(raw) as { lines?: unknown })?.lines
-    if (!Array.isArray(lines)) return []
+    if (!raw) return { lines: [], mergeId: null }
+    const stored = JSON.parse(raw) as { lines?: unknown; merge_id?: unknown } | null
+    const lines = stored?.lines
+    if (!Array.isArray(lines)) return { lines: [], mergeId: null }
     const seen = new Set<number>() // one line per offer: keep the first of any duplicates
-    return lines.filter(isLine).filter((l) => !seen.has(l.tier_id) && seen.add(l.tier_id))
+    return {
+      lines: lines.filter(isLine).filter((l) => !seen.has(l.tier_id) && seen.add(l.tier_id)),
+      mergeId: typeof stored?.merge_id === 'string' ? stored.merge_id : null,
+    }
   } catch {
-    return []
+    return { lines: [], mergeId: null }
   }
 }
 
-function writeLocal(lines: CartLine[]) {
+const readLocal = () => readLocalCart().lines
+
+function newId(): string {
+  const c = globalThis.crypto
+  if (c?.randomUUID) return c.randomUUID()
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`
+}
+
+/**
+ * Save the guest cart. Every change gives it a NEW merge id, so an id always stands for exactly
+ * these lines: if the browser tries to merge the same cart twice (the answer was lost), the server
+ * recognises the id and does not add the bundles again; if the cart changed, the id changed too.
+ */
+function writeLocal(lines: CartLine[], mergeId: string | null = lines.length ? newId() : null) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ owner: null, lines }))
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ owner: null, lines, ...(mergeId ? { merge_id: mergeId } : {}) }),
+    )
   } catch {
     // ignore: the cart still works for this visit
   }
+}
+
+/** The id of the guest cart as it is now, kept in storage so a retry after a restart reuses it. */
+function currentMergeId(): string {
+  const { lines, mergeId } = readLocalCart()
+  if (mergeId) return mergeId
+  const created = newId()
+  writeLocal(lines, created)
+  return created
 }
 
 /**
@@ -129,7 +158,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const saved = await api.get<ServerCart>(SERVER_CART)
         const local = readLocal()
         if (local.length === 0) return saved
-        const merged = await api.post<ServerCart>(`${SERVER_CART}/merge`, { lines: local })
+        // The same id on every attempt: if the server merged but its answer was lost, a retry is
+        // recognised and does not add the bundles a second time.
+        const merged = await api.post<ServerCart>(`${SERVER_CART}/merge`, {
+          lines: local,
+          merge_id: currentMergeId(),
+        })
         writeLocal([]) // only after the merge has succeeded
         return merged
       })()

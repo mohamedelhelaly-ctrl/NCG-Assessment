@@ -24,7 +24,7 @@ describe('guest cart', () => {
     const { result } = setup()
     act(() => result.current.add(7, 12, 2))
     expect(result.current.lines).toEqual([{ product_id: 7, tier_id: 12, bundles: 2 }])
-    expect(stored()).toEqual({ owner: null, lines: [{ product_id: 7, tier_id: 12, bundles: 2 }] })
+    expect(stored()).toMatchObject({ owner: null, lines: [{ product_id: 7, tier_id: 12, bundles: 2 }] })
   })
 
   test('adding the same offer again joins the existing line', () => {
@@ -92,6 +92,42 @@ describe('guest cart', () => {
     first.unmount()
     const second = setup()
     expect(second.result.current.lines).toEqual([{ product_id: 7, tier_id: 12, bundles: 2 }])
+  })
+})
+
+describe('the merge id of a guest cart', () => {
+  test('a guest cart with something in it has a merge id', () => {
+    const { result } = setup()
+    act(() => result.current.add(7, 12, 1))
+    expect(typeof stored().merge_id).toBe('string')
+    expect(stored().merge_id.length).toBeGreaterThanOrEqual(8)
+  })
+
+  test('every change gives it a new id, so an id always stands for exactly these lines', () => {
+    const { result } = setup()
+    act(() => result.current.add(7, 12, 1))
+    const first = stored().merge_id
+    act(() => result.current.add(7, 12, 1))
+    const second = stored().merge_id
+    act(() => result.current.setBundles(12, 5))
+    const third = stored().merge_id
+    expect(new Set([first, second, third]).size).toBe(3)
+  })
+
+  test('reading the cart again does not change its id (so a retry reuses it)', () => {
+    const first = setup()
+    act(() => first.result.current.add(7, 12, 1))
+    const id = stored().merge_id
+    first.unmount()
+    setup()
+    expect(stored().merge_id).toBe(id)
+  })
+
+  test('an empty cart has no merge id', () => {
+    const { result } = setup()
+    act(() => result.current.add(7, 12, 1))
+    act(() => result.current.clear())
+    expect(stored().merge_id).toBeUndefined()
   })
 })
 

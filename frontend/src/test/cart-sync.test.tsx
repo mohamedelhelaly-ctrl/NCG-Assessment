@@ -81,7 +81,9 @@ test('signing in merges the guest cart into the account in one request and clear
   await waitFor(() => expect(callsTo(calls, MERGE)).toHaveLength(1))
   const keys = calls.map((c) => c.key).filter((k) => k.includes('/me/cart'))
   expect(keys).toEqual([GET, MERGE])
-  expect(JSON.parse(String(callsTo(calls, MERGE)[0].init!.body))).toEqual({ lines: [gloves4(2), gauze4(1)] })
+  const sent = JSON.parse(String(callsTo(calls, MERGE)[0].init!.body))
+  expect(sent.lines).toEqual([gloves4(2), gauze4(1)])
+  expect(typeof sent.merge_id).toBe('string') // identifies this guest cart, so a retry is safe
 
   // same offer: bundles added together; another offer: a new line; the account's own lines stay
   expect(server.state.lines).toEqual([gloves4(3), cartLine(7, 13, 4), gauze4(1)])
@@ -136,6 +138,65 @@ test('registering also brings the guest cart into the new account', async () => 
   await userEvent.click(screen.getByRole('button', { name: 'Create account' }))
   await waitFor(() => expect(callsTo(calls, MERGE)).toHaveLength(1))
   expect(server.state.lines).toEqual([gloves4(1)])
+})
+
+// --------------------------------------------- a lost answer must not merge twice
+
+test('the merge carries the id that was stored with the guest cart', async () => {
+  seedLocalCart([gloves4(2)])
+  localStorage.setItem('cart:v1', JSON.stringify({ owner: null, lines: [gloves4(2)], merge_id: 'guest-cart-abc123' }))
+  const server = serverCart([])
+  const calls = mockApi({ ...healthy, 'POST /api/v1/auth/login': json(tokenFor(customer)), ...server.routes })
+  renderApp('/login')
+  await signInThroughTheForm()
+  await waitFor(() => expect(callsTo(calls, MERGE)).toHaveLength(1))
+  expect(JSON.parse(String(callsTo(calls, MERGE)[0].init!.body)).merge_id).toBe('guest-cart-abc123')
+})
+
+test('an older guest cart without an id still merges, with a new id that is kept for retries', async () => {
+  seedLocalCart([gloves4(2)]) // the shape before merge ids existed
+  const server = serverCart([])
+  const calls = mockApi({
+    ...healthy,
+    'POST /api/v1/auth/login': json(tokenFor(customer)),
+    ...server.routes,
+    [MERGE]: () => apiError(500, 'http_error', 'down'),
+  })
+  renderApp('/login')
+  await signInThroughTheForm()
+  await waitFor(() => expect(callsTo(calls, MERGE)).toHaveLength(1))
+  const sent = JSON.parse(String(callsTo(calls, MERGE)[0].init!.body))
+  expect(sent.merge_id).toBeTruthy()
+  expect(JSON.parse(localStorage.getItem('cart:v1')!).merge_id).toBe(sent.merge_id) // kept for the retry
+})
+
+test('if the server merged but its answer was lost, the retry does not add the bundles again', async () => {
+  seedLocalCart([gloves4(2)])
+  const server = serverCart([gloves4(1)])
+  let lose = true
+  const calls = mockApi({
+    ...healthy,
+    'POST /api/v1/auth/login': json(tokenFor(customer)),
+    ...server.routes,
+    [QUOTE]: quoteHandler(),
+    [MERGE]: (init, url) => {
+      const result = server.routes[MERGE](init, url) // the server DID merge...
+      return lose ? apiError(500, 'http_error', 'the answer never arrived') : result // ...but the browser never heard
+    },
+  })
+  renderApp('/login')
+  await signInThroughTheForm()
+  await waitFor(() => expect(server.state.lines).toEqual([gloves4(3)])) // 1 + 2, merged once
+  await waitFor(() => expect(localLines()).toEqual([gloves4(2)])) // the guest cart is still here: it never heard
+
+  lose = false
+  await userEvent.click(await screen.findByRole('link', { name: /^Cart/ }))
+  await userEvent.click(await screen.findByRole('button', { name: 'Try again' }))
+  await waitFor(() => expect(localLines()).toEqual([]))
+  expect(callsTo(calls, MERGE)).toHaveLength(2)
+  expect(server.state.lines).toEqual([gloves4(3)]) // 3, not 5
+  expect(server.state.merges).toBe(1) // the second request was recognised as a replay
+  expect(await screen.findByText('3 × 4 packs')).toBeInTheDocument()
 })
 
 // ------------------------------------------------ nothing is saved before the first load

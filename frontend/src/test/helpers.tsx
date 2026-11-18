@@ -251,7 +251,11 @@ export const localLines = () => JSON.parse(localStorage.getItem('cart:v1') ?? '{
 
 /** A fake account cart on the server: GET, PUT and merge behave like the real endpoints. */
 export function serverCart(initial: { product_id: number; tier_id: number; bundles: number }[] = []) {
-  const state = { lines: initial.map((l) => ({ ...l })) }
+  const state: { lines: typeof initial; lastMergeId: string | null; merges: number } = {
+    lines: initial.map((l) => ({ ...l })),
+    lastMergeId: null,
+    merges: 0,
+  }
   const routes: Record<string, Handler> = {
     'GET /api/v1/me/cart': () => ({ body: { lines: state.lines } }),
     'PUT /api/v1/me/cart': (init) => {
@@ -259,7 +263,11 @@ export function serverCart(initial: { product_id: number; tier_id: number; bundl
       return { body: { lines: state.lines } }
     },
     'POST /api/v1/me/cart/merge': (init) => {
-      const incoming = JSON.parse(String(init?.body)).lines as typeof state.lines
+      const body = JSON.parse(String(init?.body)) as { lines: typeof state.lines; merge_id?: string }
+      if (body.merge_id && body.merge_id === state.lastMergeId) return { body: { lines: state.lines } } // a replay
+      state.merges += 1
+      if (body.merge_id) state.lastMergeId = body.merge_id
+      const incoming = body.lines
       for (const l of incoming) {
         const same = state.lines.find((x) => x.tier_id === l.tier_id)
         if (same) same.bundles = Math.min(99, same.bundles + l.bundles)

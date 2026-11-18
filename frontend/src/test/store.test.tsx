@@ -34,12 +34,12 @@ const scales = storeProduct({
 })
 
 const card = (name: string) =>
-  screen.getByRole('heading', { name, level: 3 }).closest('article') as HTMLElement
+  screen.getByRole('heading', { name, level: 2 }).closest('article') as HTMLElement
 
 async function openStore(products = [gloves, syringes, scales], path = '/') {
   const calls = mockApi({ ...healthy, ...storeRoutes(products) })
   renderApp(path)
-  await screen.findByRole('heading', { name: 'Nitrile Examination Gloves', level: 3 }).catch(() => null)
+  await screen.findByRole('heading', { name: 'Nitrile Examination Gloves', level: 2 }).catch(() => null)
   return calls
 }
 
@@ -229,7 +229,7 @@ test('a failed load says so and can be retried', async () => {
   expect(await screen.findByRole('alert')).toHaveTextContent('Server error')
   fail = false
   await userEvent.click(screen.getByRole('button', { name: 'Try again' }))
-  expect(await screen.findByRole('heading', { name: 'Nitrile Examination Gloves', level: 3 })).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: 'Nitrile Examination Gloves', level: 2 })).toBeInTheDocument()
 })
 
 test('an empty shop says that nothing is on sale yet', async () => {

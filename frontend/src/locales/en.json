@@ -15,7 +15,8 @@
     "createAccount": "Create account",
     "signOut": "Sign out",
     "switchLanguage": "العربية",
-    "cart": "Cart"
+    "cart": "Cart",
+    "skip": "Skip to content"
   },
   "common": {
     "loading": "Loading…",
@@ -285,5 +286,11 @@
     "noCheckout": "Checkout isn't part of this demo.",
     "continue": "Continue shopping",
     "bundleCount": "Bundles in your cart: {{count}}"
+  },
+  "error": {
+    "title": "Something went wrong",
+    "body": "The page ran into an unexpected problem. Reloading usually fixes it.",
+    "reload": "Reload the page",
+    "home": "Go to the home page"
   }
 }

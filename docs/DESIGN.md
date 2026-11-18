@@ -97,7 +97,7 @@ All tables: integer `id` primary key, `created_at`, `updated_at` (timezone-aware
 
 **product_images**: `product_id` (FK, `ON DELETE CASCADE`), `storage_key`, `alt` (required), `alt_ar` (nullable), `position` (int). The main image is the lowest `position` (ties by `id`), so "set main" is a reorder and no extra column is needed.
 
-**carts**: `user_id` (FK users, `ON DELETE CASCADE`, unique). Created lazily.
+**carts**: `user_id` (FK users, `ON DELETE CASCADE`, unique), `last_merge_id` (nullable: the id of the last guest cart merged in, so a retried merge is recognised). Created lazily.
 
 **cart_items**: `cart_id` (FK carts, `ON DELETE CASCADE`), `product_id` (int), `tier_id` (int), `bundles` (`CHECK (bundles BETWEEN 1 AND 99)`), unique `(cart_id, tier_id)` [B7, B10].
 
@@ -216,7 +216,7 @@ Rules:
 
 ### 6.4 Cart persistence and merge [C23, B9]
 - Lines are `{product_id, tier_id, bundles}`, unique by `tier_id`. `PUT /me/cart` replaces all lines in one transaction (the cart row is locked with `FOR UPDATE`). It validates `bundles` 1..99, rejects duplicate `tier_id` and more than 100 lines. It does **not** check that ids exist, so stale lines survive a round trip and show as unavailable.
-- `POST /me/cart/merge` takes the guest lines and, in one transaction, sums `bundles` for a matching `tier_id`, caps at 99, and inserts the rest. It returns the merged cart. Merging is idempotent only as long as the client clears the local cart afterwards.
+- `POST /me/cart/merge` takes the guest lines and an optional `merge_id`, and in one transaction sums `bundles` for a matching `tier_id`, caps at 99, and inserts the rest. It returns the merged cart. **With a `merge_id` it is idempotent:** if `carts.last_merge_id` already equals it (the browser never heard the answer and retried), the cart is returned unchanged. The browser stores a fresh id with the guest cart on every change, so an id always stands for exactly those lines. Without an id it is not idempotent.
 - `GET /me/cart` returns lines only. The client then calls `/cart/quote` for display, the same path as for guests.
 
 #### Client cart flow (`lib/cart.tsx`)
@@ -327,3 +327,14 @@ Same as the playbook, scaled down: Railway for the API and Postgres (root direct
 4. **Deleting the last tier of an active product** deactivates the product (section 8), which the requirements did not specify.
 5. **Seed images are SVG placeholders**, not photographs (section 7).
 6. **Fonts** (a Latin and an Arabic family) are chosen when the storefront is styled in M4. The Arabic font must support Arabic script and render well at small sizes.
+
+## 15. Decisions made while building
+
+- **Idempotent merge:** `POST /me/cart/merge` accepts a `merge_id` (see 6.4); added after the first version so a lost answer cannot double a guest cart.
+- **Seed images are SVG placeholders** the manager replaces; uploads through the API still accept only JPEG, PNG and WebP.
+- **The shared "visible product" expression** aliases the tier table inside its `EXISTS`, so the same definition of "visible" works in every query, including the quote.
+- **Cart page shows nothing until every line is priced**, to avoid a half-empty summary flashing while the first prices arrive.
+- **The admin area is code-split** (lazy routes): customers never download it.
+- **Responsive and accessibility audit:** 14 pages × 3 widths × 2 languages in Chrome with axe; one `<main>` per page via the layout, a skip link, focus moved to the content on navigation, and a header that wraps instead of overflowing at 360px.
+- **Basic security headers** on every API response and on the static site.
+- **Known limitation accepted:** no "price changed" notice in the cart (C22); a removed offer is flagged.

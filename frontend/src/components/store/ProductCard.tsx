@@ -30,11 +30,11 @@ export default function ProductCard({ product }: { product: StoreProduct }) {
         <p className="text-sm text-muted">
           <bdi>{product.brand.name}</bdi>
         </p>
-        <h3 className="text-lg font-semibold leading-snug">
+        <h2 className="text-lg font-semibold leading-snug">
           <Link to={href} className="hover:text-primary">
             <bdi>{product.name}</bdi>
           </Link>
-        </h3>
+        </h2>
         <p className="text-sm text-muted">
           <bdi>{product.category.name}</bdi>
         </p>

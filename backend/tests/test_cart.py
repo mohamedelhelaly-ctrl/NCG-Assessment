@@ -314,3 +314,89 @@ async def test_tier_and_product_ids_are_not_foreign_keys(shopper):
             .all()
         )
     assert foreign == ["cart_id"]
+
+
+# ------------------------------------------- an idempotent merge (a lost response is retried)
+
+
+async def merge(client, headers, lines, merge_id=None):
+    body = {"lines": lines}
+    if merge_id is not None:
+        body["merge_id"] = merge_id
+    return await client.post(MERGE, json=body, headers=headers)
+
+
+async def test_repeating_the_same_merge_does_not_add_the_bundles_twice(client, shopper):
+    """The browser merged, never heard the answer, and tries again with the same id."""
+    first = await merge(client, shopper, [ln(1, 10, 2)], "guest-cart-0001")
+    again = await merge(client, shopper, [ln(1, 10, 2)], "guest-cart-0001")
+    assert first.json()["lines"] == [ln(1, 10, 2)]
+    assert again.status_code == 200
+    assert again.json()["lines"] == [ln(1, 10, 2)]  # 2, not 4
+    assert await current(client, shopper) == [ln(1, 10, 2)]
+
+
+async def test_a_repeated_merge_returns_the_cart_as_it_is_now(client, shopper):
+    await merge(client, shopper, [ln(1, 10, 2)], "guest-cart-0001")
+    await put(client, shopper, [ln(1, 10, 5), ln(2, 20, 1)])  # the customer kept shopping
+    again = await merge(client, shopper, [ln(1, 10, 2)], "guest-cart-0001")
+    assert again.json()["lines"] == [ln(1, 10, 5), ln(2, 20, 1)]  # untouched by the replay
+
+
+async def test_a_different_merge_id_is_a_new_merge(client, shopper):
+    await merge(client, shopper, [ln(1, 10, 2)], "guest-cart-0001")
+    second = await merge(client, shopper, [ln(1, 10, 3)], "guest-cart-0002")
+    assert second.json()["lines"] == [ln(1, 10, 5)]
+
+
+async def test_without_a_merge_id_every_merge_adds(client, shopper):
+    await merge(client, shopper, [ln(1, 10, 2)])
+    again = await merge(client, shopper, [ln(1, 10, 2)])
+    assert again.json()["lines"] == [ln(1, 10, 4)]  # the old behaviour, for callers that send no id
+
+
+async def test_the_same_merge_id_for_two_people_is_two_merges(client):
+    alice, _ = await headers_for("alice@shop.example")
+    bob, _ = await headers_for("bob@shop.example")
+    await merge(client, alice, [ln(1, 10, 1)], "guest-cart-0001")
+    other = await merge(client, bob, [ln(1, 10, 7)], "guest-cart-0001")
+    assert other.json()["lines"] == [ln(1, 10, 7)]  # ids are per cart, not global
+
+
+async def test_a_failed_merge_does_not_use_up_its_id(client, shopper):
+    await put(client, shopper, [ln(1, i, 1) for i in range(99)])
+    full = await merge(client, shopper, [ln(1, 500, 1), ln(1, 501, 1)], "guest-cart-0001")
+    assert full.status_code == 409
+    await put(client, shopper, [ln(1, 0, 1)])  # room again
+    retry = await merge(client, shopper, [ln(1, 500, 1), ln(1, 501, 1)], "guest-cart-0001")
+    assert retry.status_code == 200 and len(retry.json()["lines"]) == 3  # the retry really merged
+
+
+async def test_simultaneous_repeats_of_one_merge_add_the_bundles_once(client, shopper):
+    results = await asyncio.gather(
+        *(merge(client, shopper, [ln(1, 10, 2)], "guest-cart-0001") for _ in range(6))
+    )
+    assert all(r.status_code == 200 for r in results)
+    assert await current(client, shopper) == [ln(1, 10, 2)]
+
+
+@pytest.mark.parametrize("bad", ["short", "has spaces here", "x" * 65, "bad;id-12345", ""])
+async def test_a_malformed_merge_id_is_rejected(client, shopper, bad):
+    r = await merge(client, shopper, [ln(1, 10, 1)], bad)
+    assert r.status_code == 422 and "merge_id" in r.json()["error"]["fields"]
+    assert await current(client, shopper) == []
+
+
+async def test_the_merge_id_is_stored_with_the_cart(shopper):
+    from sqlalchemy import select
+
+    async with SessionLocal() as db:
+        user = (await db.execute(select(User))).scalars().first()
+    # saving through the service sets it; here we check the column exists and is nullable
+    async with SessionLocal() as db:
+        cart = Cart(user_id=user.id)
+        db.add(cart)
+        await db.flush()
+        assert cart.last_merge_id is None
+        cart.last_merge_id = "guest-cart-0001"
+        await db.flush()

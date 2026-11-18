@@ -1,5 +1,7 @@
+import { Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet } from 'react-router'
+import { LoadingState } from '../ui/Feedback'
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `block whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium lg:border-s-2 lg:rounded-s-none ${
@@ -30,7 +32,9 @@ export default function AdminLayout() {
         </nav>
       </div>
       <div className="min-w-0">
-        <Outlet />
+        <Suspense fallback={<LoadingState />}>
+          <Outlet />
+        </Suspense>
       </div>
     </div>
   )

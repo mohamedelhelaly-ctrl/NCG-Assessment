@@ -55,12 +55,12 @@ export default function ProductPage() {
 function Shell({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation()
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
       <Link to="/" className="mb-6 inline-block text-sm text-muted hover:text-primary">
         {t('product.back')}
       </Link>
       {children}
-    </main>
+    </div>
   )
 }
 
