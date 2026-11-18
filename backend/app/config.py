@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     first_admin_email: str = ""
     first_admin_password: str = ""
     seed_demo: bool = False
+    seed_demo_reset: bool = False
     demo_password: str = ""
 
     storage_backend: str = "local"

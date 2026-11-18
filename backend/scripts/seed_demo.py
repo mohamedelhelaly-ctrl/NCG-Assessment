@@ -1,15 +1,25 @@
-"""Fictional demo catalog: brands, categories, products with 1/2/3/2 pricing tiers, generated
-images, and a demo customer. Idempotent. Usage: python -m scripts.seed_demo
+"""Fictional demo catalog: 4 brands, 3 categories, 12 products with 1 to 3 pricing tiers each, and
+one simple SVG placeholder per product (the product name on a plain background). The manager
+replaces the placeholders with real pictures from the admin area. Also seeds a demo customer.
 
-Images are drawn with Pillow (a gradient and the product name) and stored through the normal
-storage backend, so there are no stock photos, no downloads and no licensing questions.
+Idempotent: it does nothing when the demo catalog is already there.
+
+Usage:
+    python -m scripts.seed_demo            # add the demo data if missing
+    python -m scripts.seed_demo --reset    # first remove ALL products, brands and categories (and
+                                           # their stored images), then add the demo data
+    SEED_DEMO_RESET=true                   # same as --reset, for the startup seed on a server
+
+The reset only runs while the demo catalog is NOT present, so leaving SEED_DEMO_RESET on cannot
+wipe a catalog that has already been seeded and edited. Remove the variable after one deploy.
 """
 
 import asyncio
-import io
+import sys
+import textwrap
+from xml.sax.saxutils import escape
 
-from PIL import Image, ImageDraw, ImageFont
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
 from app.config import get_settings
 from app.core.security import MAX_PASSWORD_BYTES, hash_password
@@ -20,157 +30,199 @@ from app.models.category import Category
 from app.models.pricing_tier import PricingTier
 from app.models.product import Product
 from app.models.product_image import ProductImage
-from app.services import images as image_rules
 from app.services.storage import StorageBackend, get_storage
 
-MARKER_BRAND = "Nova Health"
+MARKER_BRAND = "Nuvexa Medical"
 DEMO_EMAIL = "demo.customer@example.com"
+SVG_TYPE = "image/svg+xml"
 
-BRANDS = [("Nova Health", "نوفا هيلث"), ("PureCare", None)]
-CATEGORIES = [("Wound Care", "العناية بالجروح"), ("Vitamins", None), ("Devices", "الأجهزة")]
+BRANDS = ["Nuvexa Medical", "Orvanta Health", "Velmora Care", "Medquora"]
+CONSUMABLES = "Medical Consumables"
+DEVICES = "Medical Devices"
+FIRST_AID = "First Aid & Wound Care"
+CATEGORIES = [CONSUMABLES, DEVICES, FIRST_AID]
 
-# name, name_ar, description, description_ar, brand, category, tiers, palette
-# tier: (label, label_ar, units, price in fils)
+# Plain background per category, so the placeholders are easy to tell apart in a grid.
+TONES = {CONSUMABLES: "#e1f0ea", DEVICES: "#e3ebf5", FIRST_AID: "#fbefd5"}
+
+# name, category, brand, description, tiers as (packs, price in fils)
 PRODUCTS = [
-    dict(  # Product A: exactly one option
-        name="Sterile Gauze Pads",
-        name_ar="ضمادات شاش معقمة",
-        description="Individually wrapped sterile gauze pads, 10 x 10 cm. Soft, absorbent and lint free.",
-        description_ar="ضمادات شاش معقمة ومغلفة بشكل فردي، مقاس 10 × 10 سم. ناعمة وماصة وخالية من الوبر.",
-        brand="Nova Health",
-        category="Wound Care",
-        tiers=[("1 pack", "عبوة واحدة", 1, 3250)],
-        colors=((38, 110, 160), (120, 190, 220)),
+    (
+        "Nitrile Examination Gloves",
+        CONSUMABLES,
+        "Nuvexa Medical",
+        "Powder-free nitrile gloves for examinations and general clinical use.",
+        [(1, 5500), (4, 19500), (12, 55000)],
     ),
-    dict(  # Product B: exactly two options (no Arabic description: shows the fallback)
-        name="Adhesive Bandage Strips",
-        name_ar="شرائط لاصقة للجروح",
-        description="Breathable, water resistant bandage strips in assorted sizes. Gentle on skin.",
-        description_ar=None,
-        brand="PureCare",
-        category="Wound Care",
-        tiers=[("1 pack", "عبوة واحدة", 1, 2750), ("4 packs", "4 عبوات", 4, 9900)],
-        colors=((30, 130, 110), (130, 210, 180)),
+    (
+        "Disposable Medical Face Masks",
+        CONSUMABLES,
+        "Velmora Care",
+        "Three-layer disposable face masks with soft ear loops, for clinics and everyday use.",
+        [(1, 2250), (4, 8000), (12, 22500)],
     ),
-    dict(  # Product C: exactly three options, the brief's example prices
-        name="Vitamin C 500 mg",
-        name_ar="فيتامين سي 500 ملغ",
-        description="Daily vitamin C tablets to support normal immune function. 60 tablets per pack.",
-        description_ar="أقراص فيتامين سي اليومية لدعم وظائف المناعة الطبيعية. 60 قرصًا في العبوة.",
-        brand="Nova Health",
-        category="Vitamins",
-        tiers=[
-            ("1 pack", "عبوة واحدة", 1, 5500),
-            ("4 packs", "4 عبوات", 4, 19500),
-            ("12 packs", "12 عبوة", 12, 55000),
-        ],
-        colors=((200, 110, 20), (245, 200, 110)),
+    (
+        "Disposable Syringes (5ml)",
+        CONSUMABLES,
+        "Nuvexa Medical",
+        "Single-use 5 ml syringes, individually sealed.",
+        [(1, 3000), (4, 10500)],
     ),
-    dict(  # Extra: no Arabic text at all (demonstrates the English fallback)
-        name="Digital Thermometer",
-        name_ar=None,
-        description="Fast, accurate digital thermometer with a flexible tip and a memory function.",
-        description_ar=None,
-        brand="PureCare",
-        category="Devices",
-        tiers=[("1 piece", None, 1, 8500), ("3 pieces", None, 3, 24000)],
-        colors=((90, 70, 150), (180, 160, 225)),
+    (
+        "Disposable IV Sets",
+        CONSUMABLES,
+        "Velmora Care",
+        "Single-use intravenous infusion sets with a drip chamber and flow regulator.",
+        [(1, 4250), (10, 38000)],
     ),
-    dict(  # Extra: inactive and without tiers, so visible to admins only
-        name="Pulse Oximeter (draft)",
-        name_ar=None,
-        description="Draft product: not on sale yet.",
-        description_ar=None,
-        brand="PureCare",
-        category="Devices",
-        tiers=[],
-        colors=((120, 120, 120), (200, 200, 200)),
-        is_active=False,
-        images=1,
+    (
+        "Digital Thermometers",
+        DEVICES,
+        "Orvanta Health",
+        "Digital thermometer with a clear display and a quick reading.",
+        [(1, 6750)],
+    ),
+    (
+        "Digital Blood Pressure Monitors",
+        DEVICES,
+        "Orvanta Health",
+        "Upper-arm digital blood pressure monitor with automatic inflation and a reading memory.",
+        [(1, 24500)],
+    ),
+    (
+        "Fingertip Pulse Oximeters",
+        DEVICES,
+        "Orvanta Health",
+        "Fingertip pulse oximeter showing oxygen saturation and pulse rate on a small display.",
+        [(1, 12500), (2, 23000)],
+    ),
+    (
+        "Digital Weighing Scales",
+        DEVICES,
+        "Orvanta Health",
+        "Digital weighing scale with a large display, for the clinic or at home.",
+        [(1, 15750)],
+    ),
+    (
+        "Sterile Gauze Pads",
+        FIRST_AID,
+        "Medquora",
+        "Sterile gauze pads for cleaning and dressing wounds.",
+        [(1, 1750), (4, 6250), (12, 18000)],
+    ),
+    (
+        "Medical Adhesive Tape",
+        FIRST_AID,
+        "Velmora Care",
+        "Medical adhesive tape for securing dressings and bandages.",
+        [(1, 1250), (6, 6500)],
+    ),
+    (
+        "Adhesive Bandages",
+        FIRST_AID,
+        "Medquora",
+        "Adhesive bandages for minor cuts and grazes.",
+        [(1, 1500), (5, 6500), (20, 22000)],
+    ),
+    (
+        "Elastic Crepe Bandages",
+        FIRST_AID,
+        "Velmora Care",
+        "Elastic crepe bandages for compression and support.",
+        [(1, 2250)],
     ),
 ]
 
 
-def draw_image(title: str, colors: tuple[tuple[int, int, int], tuple[int, int, int]], variant: int):
-    """A 1200x900 gradient card with the product name. `variant` shifts the look per image."""
-    width, height = 1200, 900
-    top, bottom = colors if variant % 2 == 0 else colors[::-1]
-    image = Image.new("RGB", (width, height))
-    pixels = image.load()
-    for y in range(height):
-        t = y / (height - 1)
-        row = tuple(int(top[i] + (bottom[i] - top[i]) * t) for i in range(3))
-        for x in range(width):
-            pixels[x, y] = row
-    draw = ImageDraw.Draw(image)
-    radius = 160 + variant * 70
-    cx, cy = (width * (0.25 + 0.25 * variant)) % width, height * 0.35
-    draw.ellipse((cx - radius, cy - radius, cx + radius, cy + radius), fill=(255, 255, 255))
-    font = ImageFont.load_default(size=64)
-    draw.text((60, height - 150), title, fill=(255, 255, 255), font=font)
-    out = io.BytesIO()
-    image.save(out, format="PNG")
-    return out.getvalue()
+def tier_label(packs: int) -> str:
+    return f"{packs} pack" if packs == 1 else f"{packs} packs"
 
 
-async def seed_catalog(storage: StorageBackend) -> str:
+def placeholder_svg(title: str, background: str) -> str:
+    """A 1200x900 picture: the title, centred, on a plain background. The title is XML-escaped."""
+    lines = textwrap.wrap(title, width=16) or [title]
+    size, leading = 72, 88
+    first_y = 450 - (len(lines) - 1) * leading / 2
+    spans = "".join(
+        f'<tspan x="600" y="{first_y + i * leading:.0f}">{escape(line)}</tspan>'
+        for i, line in enumerate(lines)
+    )
+    return (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" width="1200" height="900">'
+        f'<rect width="1200" height="900" fill="{background}"/>'
+        f'<text fill="#1c2a25" font-family="system-ui, Arial, sans-serif" font-size="{size}" '
+        f'font-weight="600" text-anchor="middle" dominant-baseline="central">{spans}</text>'
+        "</svg>"
+    )
+
+
+async def reset_catalog(storage: StorageBackend) -> int:
+    """Remove every product, tier, image row, brand and category, then the stored image files.
+    Returns how many files were removed from storage."""
     async with SessionLocal() as db:
-        if (await db.execute(select(Brand.id).where(Brand.name == MARKER_BRAND))).first():
-            return "exists: demo catalog already present, left unchanged"
+        keys = list((await db.execute(select(ProductImage.storage_key))).scalars())
+        for model in (PricingTier, ProductImage, Product, Brand, Category):
+            await db.execute(delete(model))
+        await db.commit()
+    removed = 0
+    for key in keys:  # after the commit; a leftover file is harmless, a lost row is not
+        try:
+            await storage.delete(key)
+            removed += 1
+        except Exception as error:  # noqa: BLE001
+            print(f"seed_demo could not delete {key}: {error}")
+    return removed
 
-        brands = {n: Brand(name=n, name_ar=ar) for n, ar in BRANDS}
-        categories = {n: Category(name=n, name_ar=ar) for n, ar in CATEGORIES}
+
+async def seed_catalog(storage: StorageBackend, reset: bool = False) -> str:
+    async with SessionLocal() as db:
+        present = (await db.execute(select(Brand.id).where(Brand.name == MARKER_BRAND))).first()
+    if present:
+        note = " (reset ignored: the demo catalog is already there)" if reset else ""
+        return f"exists: demo catalog already present, left unchanged{note}"
+
+    removed = await reset_catalog(storage) if reset else None
+
+    async with SessionLocal() as db:
+        brands = {name: Brand(name=name) for name in BRANDS}
+        categories = {name: Category(name=name) for name in CATEGORIES}
         db.add_all([*brands.values(), *categories.values()])
         await db.flush()
 
         stored_keys: list[str] = []
         try:
-            for spec in PRODUCTS:
+            for name, category, brand, description, tiers in PRODUCTS:
                 product = Product(
-                    brand_id=brands[spec["brand"]].id,
-                    category_id=categories[spec["category"]].id,
-                    name=spec["name"],
-                    name_ar=spec["name_ar"],
-                    description=spec["description"],
-                    description_ar=spec["description_ar"],
-                    is_active=spec.get("is_active", True),
+                    brand_id=brands[brand].id,
+                    category_id=categories[category].id,
+                    name=name,
+                    description=description,
+                    is_active=True,
                 )
                 db.add(product)
                 await db.flush()
-                for label, label_ar, units, price in spec["tiers"]:
+                for packs, price in tiers:
                     db.add(
                         PricingTier(
                             product_id=product.id,
-                            label=label,
-                            label_ar=label_ar,
-                            units=units,
+                            label=tier_label(packs),
+                            units=packs,
                             price_fils=price,
                         )
                     )
-                for position in range(spec.get("images", 3)):
-                    png = draw_image(spec["name"], spec["colors"], position)
-                    data = await image_rules.process_upload(png)
-                    key = image_rules.new_storage_key(product.id)
-                    await storage.save(key, data, image_rules.CONTENT_TYPE)
-                    stored_keys.append(key)
-                    db.add(
-                        ProductImage(
-                            product_id=product.id,
-                            storage_key=key,
-                            alt=f"{spec['name']}, view {position + 1}",
-                            alt_ar=f"{spec['name_ar']}، صورة {position + 1}"
-                            if spec["name_ar"]
-                            else None,
-                            position=position,
-                        )
-                    )
+                key = f"products/{product.id}/placeholder.svg"
+                svg = placeholder_svg(name, TONES[category]).encode()
+                await storage.save(key, svg, SVG_TYPE)
+                stored_keys.append(key)
+                db.add(ProductImage(product_id=product.id, storage_key=key, alt=name, position=0))
             await db.commit()
         except Exception:
             await db.rollback()
             for key in stored_keys:  # do not leave orphaned files behind
                 await storage.delete(key)
             raise
-    return "created: demo catalog"
+    suffix = f" (replaced the old catalog, {removed} stored images removed)" if reset else ""
+    return f"created: demo catalog{suffix}"
 
 
 async def seed_customer() -> str:
@@ -193,7 +245,8 @@ async def seed_customer() -> str:
 
 
 async def main() -> None:
-    print(f"seed_demo catalog {await seed_catalog(get_storage())}")
+    reset = "--reset" in sys.argv or get_settings().seed_demo_reset
+    print(f"seed_demo catalog {await seed_catalog(get_storage(), reset=reset)}")
     print(f"seed_demo customer {await seed_customer()}")
     await engine.dispose()
 

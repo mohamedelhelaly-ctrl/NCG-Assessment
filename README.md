@@ -39,7 +39,11 @@ npm test && npm run lint && npm run build
 
 ## Demo data
 
-With `SEED_DEMO=true` the API seeds a fictional catalog on startup (idempotent): 2 brands, 3 categories and products with 1, 2 and 3 pricing options, plus two extras (one with no Arabic text, one admin-only draft). Images are generated, so no stock photos are used. Set `DEMO_PASSWORD` to also create the demo customer `demo.customer@example.com`. Run it by hand with `.venv/bin/python -m scripts.seed_demo`.
+With `SEED_DEMO=true` the API seeds a fictional catalog on startup (idempotent): 4 brands (Nuvexa Medical, Orvanta Health, Velmora Care, Medquora), 3 categories (Medical Consumables, Medical Devices, First Aid & Wound Care) and 12 products with 1, 2 or 3 pricing tiers each. Every product gets one simple SVG placeholder (its name on a plain background); the store manager replaces these with real pictures in the admin area. Set `DEMO_PASSWORD` to also create the demo customer `demo.customer@example.com`.
+
+Run it by hand with `.venv/bin/python -m scripts.seed_demo`.
+
+**Replacing an older or edited catalog.** `--reset` (or `SEED_DEMO_RESET=true` on a server) first removes **all** products, brands and categories and their stored images, then seeds the demo data. It only acts while the demo catalog is missing, so leaving the variable on cannot wipe a catalog that was already seeded and edited. Switch it off again after one start.
 
 ## Images
 
