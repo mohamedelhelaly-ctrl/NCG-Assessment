@@ -1,86 +1,88 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router'
 import FormField from '../components/auth/FormField'
+import { usePageTitle } from '../hooks/usePageTitle'
 import { ApiError } from '../lib/api'
 import { useAuth } from '../lib/authContext'
+import { errorText } from '../lib/errors'
 
 export default function RegisterPage() {
+  const { t } = useTranslation()
+  usePageTitle('title.register')
   const { register } = useAuth()
   const navigate = useNavigate()
   const [fields, setFields] = useState<Record<string, string>>({})
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<unknown>(null)
   const [submitting, setSubmitting] = useState(false)
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const form = new FormData(event.currentTarget)
-    setSubmitting(true)
+    const password = String(form.get('password'))
     setError(null)
     setFields({})
+    if (password.length < 10) {
+      // Checked here too so the message is in the user's language.
+      setFields({ password: t('validation.passwordLength') })
+      return
+    }
+    setSubmitting(true)
     try {
-      await register(
-        String(form.get('full_name')),
-        String(form.get('email')),
-        String(form.get('password')),
-      )
+      await register(String(form.get('full_name')), String(form.get('email')), password)
       navigate('/', { replace: true })
     } catch (e) {
-      if (e instanceof ApiError) {
-        setFields(e.fields)
-        // Field errors are shown next to the inputs; anything else (email taken) goes on top.
-        if (Object.keys(e.fields).length === 0) setError(e.message)
-      } else {
-        setError('Something went wrong')
-      }
+      if (e instanceof ApiError && Object.keys(e.fields).length > 0) setFields(e.fields)
+      else setError(e)
       setSubmitting(false)
     }
   }
 
   return (
     <main className="mx-auto max-w-md p-6">
-      <h1 className="mb-4 text-2xl font-semibold">Create account</h1>
+      <h1 className="mb-4 text-2xl font-semibold">{t('auth.registerTitle')}</h1>
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
         <FormField
-          label="Full name"
+          label={t('auth.fullName')}
           name="full_name"
           autoComplete="name"
           required
           error={fields.full_name}
         />
         <FormField
-          label="Email"
+          label={t('auth.email')}
           name="email"
           type="email"
+          dir="ltr"
           autoComplete="email"
           required
           error={fields.email}
         />
         <FormField
-          label="Password"
+          label={t('auth.password')}
           name="password"
           type="password"
+          dir="ltr"
           autoComplete="new-password"
           required
-          minLength={10}
           error={fields.password}
         />
-        <p className="text-sm text-slate-600">At least 10 characters.</p>
-        {error && (
+        <p className="text-sm text-slate-600">{t('auth.passwordHint')}</p>
+        {error !== null && (
           <p role="alert" className="text-sm text-red-700">
-            {error}
+            {errorText(t, error)}
           </p>
         )}
-        <button
-          type="submit"
-          disabled={submitting}
-          className="rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-60"
-        >
-          {submitting ? 'Creating…' : 'Create account'}
+        <button type="submit" disabled={submitting} className="btn btn-primary">
+          {submitting ? t('auth.creating') : t('auth.registerButton')}
         </button>
       </form>
       <p className="mt-4 text-sm">
-        Already registered? <Link to="/login" className="underline">Sign in</Link>
+        {t('auth.haveAccount')}{' '}
+        <Link to="/login" className="underline">
+          {t('auth.signInLink')}
+        </Link>
       </p>
     </main>
   )

@@ -1,8 +1,13 @@
-import { Route, Routes } from 'react-router'
+import { Navigate, Route, Routes } from 'react-router'
+import AdminLayout from './components/admin/AdminLayout'
 import { GuestOnly, RequireAdmin } from './components/auth/guards'
 import Layout from './components/layout/Layout'
-import AdminHomePage from './pages/AdminHomePage'
+import BrandsPage from './pages/admin/BrandsPage'
+import CategoriesPage from './pages/admin/CategoriesPage'
+import ProductFormPage from './pages/admin/ProductFormPage'
+import ProductsPage from './pages/admin/ProductsPage'
 import LoginPage from './pages/LoginPage'
+import NotFoundPage from './pages/NotFoundPage'
 import RegisterPage from './pages/RegisterPage'
 import StatusPage from './pages/StatusPage'
 
@@ -16,8 +21,16 @@ export default function App() {
           <Route path="/register" element={<RegisterPage />} />
         </Route>
         <Route element={<RequireAdmin />}>
-          <Route path="/admin" element={<AdminHomePage />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Navigate to="products" replace />} />
+            <Route path="products" element={<ProductsPage />} />
+            <Route path="products/new" element={<ProductFormPage />} />
+            <Route path="products/:id" element={<ProductFormPage />} />
+            <Route path="brands" element={<BrandsPage />} />
+            <Route path="categories" element={<CategoriesPage />} />
+          </Route>
         </Route>
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
   )

@@ -13,3 +13,83 @@ export interface TokenResponse {
   token_type: string
   user: User
 }
+
+export interface Page<T> {
+  items: T[]
+  total: number
+  page: number
+  page_size: number
+  total_pages: number
+}
+
+// ---- admin ----
+export interface NamedAdmin {
+  id: number
+  name: string
+  name_ar: string | null
+  display_name: string
+  product_count: number
+}
+
+export interface TierAdmin {
+  id: number
+  label: string
+  label_ar: string | null
+  units: number
+  price_fils: number
+}
+
+export interface TierInput {
+  label: string
+  label_ar: string | null
+  units: number
+  price_fils: number
+}
+
+export interface ImageAdmin {
+  id: number
+  url: string
+  alt: string
+  alt_ar: string | null
+  position: number
+}
+
+export interface ProductListItem {
+  id: number
+  name: string
+  name_ar: string | null
+  display_name: string
+  brand: string
+  category: string
+  is_active: boolean
+  tier_count: number
+  image_count: number
+  missing_ar: boolean
+  main_image_url: string | null
+  created_at: string
+}
+
+export interface ProductAdmin {
+  id: number
+  brand_id: number
+  category_id: number
+  name: string
+  name_ar: string | null
+  description: string
+  description_ar: string | null
+  is_active: boolean
+  tiers: TierAdmin[]
+  images: ImageAdmin[]
+  created_at: string
+  updated_at: string
+}
+
+export interface ProductPayload {
+  brand_id: number
+  category_id: number
+  name: string
+  name_ar: string | null
+  description: string
+  description_ar: string | null
+  is_active: boolean
+}

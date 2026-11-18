@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { usePageTitle } from '../hooks/usePageTitle'
 import { api } from '../lib/api'
 
 type State = { kind: 'loading' } | { kind: 'ok' } | { kind: 'error'; message: string }
 
 export default function StatusPage() {
+  const { t } = useTranslation()
+  usePageTitle('title.home')
   const [state, setState] = useState<State>({ kind: 'loading' })
 
   useEffect(() => {
@@ -19,10 +23,10 @@ export default function StatusPage() {
 
   return (
     <main className="mx-auto max-w-xl p-6">
-      <h1 className="text-2xl font-semibold">Shop</h1>
-      {state.kind === 'loading' && <p role="status">Checking the API…</p>}
-      {state.kind === 'ok' && <p role="status">API and database are reachable.</p>}
-      {state.kind === 'error' && <p role="alert">API unreachable: {state.message}</p>}
+      <h1 className="text-2xl font-semibold">{t('app.name')}</h1>
+      {state.kind === 'loading' && <p role="status">{t('status.checking')}</p>}
+      {state.kind === 'ok' && <p role="status">{t('status.reachable')}</p>}
+      {state.kind === 'error' && <p role="alert">{t('status.unreachable', { message: state.message })}</p>}
     </main>
   )
 }

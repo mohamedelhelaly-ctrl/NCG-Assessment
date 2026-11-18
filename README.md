@@ -2,7 +2,7 @@
 
 A storefront and admin area for a small catalog where each product has several **bundle offers** (pricing tiers), in English and Arabic.
 
-Status: **M2** (skeleton, accounts and roles, catalog API with admin CRUD, image uploads and demo data). See [docs/](docs/) for the [requirements](docs/REQUIREMENTS_DRAFT.md) and the [design](docs/DESIGN.md).
+Status: **M3** (skeleton, accounts and roles, catalog API, image uploads, demo data, English/Arabic interface and the admin area). See [docs/](docs/) for the [requirements](docs/REQUIREMENTS_DRAFT.md) and the [design](docs/DESIGN.md).
 
 ## Layout
 
@@ -44,6 +44,10 @@ With `SEED_DEMO=true` the API seeds a fictional catalog on startup (idempotent):
 ## Images
 
 Uploads are validated (real file type, 5 MB, at most 10 per product), stripped of metadata and re-encoded as WebP. In development they are stored in `backend/uploads` and served at `/media`. In production the API **requires** Cloudflare R2 (`STORAGE_BACKEND=r2` plus the `R2_*` variables in `backend/.env.example`) and refuses to start without it.
+
+## Languages
+
+The interface is available in English (default) and Arabic (right to left), with a switcher in the header. The choice is remembered in the browser. Text lives in `frontend/src/locales/{en,ar}.json`; a test fails if the two files differ in keys or placeholders. Catalog content (names, descriptions, tier labels, image alt text) has an optional Arabic version per field in the admin forms, and the English text is shown wherever the Arabic is empty.
 
 ## Remove everything
 
