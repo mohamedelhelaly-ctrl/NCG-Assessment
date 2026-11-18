@@ -50,9 +50,9 @@ test('the switcher button is written in the language it switches to', () => {
 test('the page title follows the language', async () => {
   mockApi(healthy)
   renderApp('/login')
-  expect(document.title).toBe('Sign in · Shop')
+  expect(document.title).toBe('Sign in · MedicStore')
   await userEvent.click(screen.getByRole('button', { name: 'العربية' }))
-  await waitFor(() => expect(document.title).toBe('تسجيل الدخول · المتجر'))
+  await waitFor(() => expect(document.title).toBe('تسجيل الدخول · MedicStore'))
 })
 
 test('the chosen language is remembered on the next visit', async () => {

@@ -28,7 +28,7 @@ settings = get_settings()
 
 validate_settings(settings)
 
-app = FastAPI(title="Shop API", version="0.1.0")
+app = FastAPI(title="MedicStore API", version="0.1.0")
 app.state.limiter = limiter
 register_error_handlers(app)
 

@@ -1,4 +1,4 @@
-# Shop: medical e-commerce with multi-tier pricing
+# MedicStore: medical e-commerce with multi-tier pricing
 
 A storefront and admin area for a small catalog where each product has several **bundle offers** (pricing tiers), in English and Arabic.
 
