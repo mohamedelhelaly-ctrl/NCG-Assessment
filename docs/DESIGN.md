@@ -321,7 +321,7 @@ Same as the playbook, scaled down: Railway for the API and Postgres (root direct
 
 ## 14. Clarifications and deviations from the requirements
 
-1. **C22 "repriced" notice:** the quote always uses current prices, so a price changed by an admin is applied automatically, but the cart does **not** show a "price changed" notice. Showing one would require storing the last-seen price per line. I propose to leave it out and list it under known limitations. The "unavailable" case is fully handled.
+1. **C22 "repriced" notice:** the quote always uses current prices, so a price changed by an admin is applied automatically, but the cart does **not** show a "price changed" notice. Showing one would require storing the last-seen price per line. **Accepted by the owner:** it is left out and listed under known limitations. The "unavailable" case is fully handled.
 2. **`cart_items` has no foreign keys** to products and tiers (3.2), which departs from the playbook's "explicit `ondelete` on every foreign key" for those two columns, on purpose.
 3. **Error shape** gains an optional `params` object (section 6).
 4. **Deleting the last tier of an active product** deactivates the product (section 8), which the requirements did not specify.
