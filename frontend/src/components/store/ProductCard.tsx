@@ -51,6 +51,7 @@ export default function ProductCard({ product }: { product: StoreProduct }) {
       <button
         type="button"
         className="btn btn-primary mt-4 w-full"
+        disabled={cart.status === 'loading'}
         onClick={() => {
           cart.add(product.id, selectedId, 1)
           setJustAdded(true)

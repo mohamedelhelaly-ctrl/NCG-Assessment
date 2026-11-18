@@ -20,6 +20,7 @@ from app.routers import (
     admin_tiers,
     auth,
     brands,
+    cart,
     categories,
     products,
 )
@@ -44,8 +45,11 @@ API = "/api/v1"
 app.include_router(auth.router, prefix=API)
 
 # Public storefront reads
-for public_router in (brands.router, categories.router, products.router):
+for public_router in (brands.router, categories.router, products.router, cart.quote_router):
     app.include_router(public_router, prefix=API)
+
+# The signed-in cart: customers and admins (the cart module in the permissions config).
+app.include_router(cart.router, prefix=API, dependencies=[Depends(require_module("cart", "write"))])
 
 # Admin area: every router is guarded here, so access control is visible in one place.
 admin_guard = [Depends(require_module("catalog_admin", "write"))]

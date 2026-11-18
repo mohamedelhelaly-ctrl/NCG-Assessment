@@ -149,7 +149,7 @@ test('adding sends the chosen offer and bundle count to the cart and confirms it
   await userEvent.click(screen.getByRole('button', { name: 'Add to cart' }))
   expect(await screen.findByText('Added to your cart: 2 × 4 packs.')).toBeInTheDocument()
   expect(stored()).toEqual([{ product_id: 7, tier_id: 12, bundles: 2 }])
-  expect(screen.getByText('Cart').closest('[role="status"]')).toHaveTextContent('2')
+  expect(screen.getByText('Cart').closest('a')).toHaveTextContent('2')
 })
 
 test('adding the same offer again adds to its line; another offer is a new line', async () => {

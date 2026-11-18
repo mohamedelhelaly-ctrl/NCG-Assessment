@@ -1,6 +1,6 @@
 from sqlalchemy import ColumnElement, and_, exists, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import contains_eager, selectinload
+from sqlalchemy.orm import aliased, contains_eager, selectinload
 
 from app.core.i18n import Lang
 from app.models.brand import Brand
@@ -10,7 +10,10 @@ from app.models.product import Product
 
 
 def has_tiers() -> ColumnElement[bool]:
-    return exists(select(1).where(PricingTier.product_id == Product.id))
+    # An alias, so this also works inside queries that select from tiers themselves (the quote):
+    # without it the inner tier table would be auto-correlated to the outer one.
+    tier = aliased(PricingTier)
+    return exists(select(1).where(tier.product_id == Product.id))
 
 
 def visible() -> ColumnElement[bool]:

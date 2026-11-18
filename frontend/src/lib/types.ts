@@ -127,3 +127,25 @@ export interface StoreProduct {
 export interface StoreProductDetail extends StoreProduct {
   images: StoreImage[]
 }
+
+// ---- cart quote (the server prices every line) ----
+export interface QuoteLine {
+  product_id: number
+  tier_id: number
+  bundles: number
+  status: 'ok' | 'unavailable' | 'invalid'
+  product_name: string | null
+  tier_label: string | null
+  image_url: string | null
+  image_alt: string | null
+  units: number | null
+  bundle_price_fils: number | null
+  pack_quantity: number | null
+  line_total_fils: number | null
+}
+
+export interface Quote {
+  lines: QuoteLine[]
+  totals: { line_count: number; bundle_count: number; pack_count: number; total_fils: number }
+  problems: { code: 'unavailable' | 'invalid_bundles'; index: number }[]
+}

@@ -1,10 +1,15 @@
 import { act, renderHook } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { describe, expect, test } from 'vitest'
+import { AuthProvider } from './auth'
 import { CartProvider } from './cart'
 import { useCart } from './cartContext'
 
-const wrapper = ({ children }: { children: ReactNode }) => <CartProvider>{children}</CartProvider>
+const wrapper = ({ children }: { children: ReactNode }) => (
+  <AuthProvider>
+    <CartProvider>{children}</CartProvider>
+  </AuthProvider>
+)
 const setup = () => renderHook(() => useCart(), { wrapper })
 const stored = () => JSON.parse(localStorage.getItem('cart:v1') ?? 'null')
 

@@ -2,7 +2,7 @@
 
 A storefront and admin area for a small catalog where each product has several **bundle offers** (pricing tiers), in English and Arabic.
 
-Status: **M4** (accounts and roles, catalog API, image uploads, demo data, English/Arabic interface, the admin area, and the storefront with filters, search and product pages; the cart page is next). See [docs/](docs/) for the [requirements](docs/REQUIREMENTS_DRAFT.md) and the [design](docs/DESIGN.md).
+Status: **M5** (accounts and roles, catalog API, image uploads, demo data, English/Arabic interface, the admin area, the storefront, and the cart: a guest cart in the browser that is saved to the account and merged on sign-in, with prices quoted by the server). See [docs/](docs/) for the [requirements](docs/REQUIREMENTS_DRAFT.md) and the [design](docs/DESIGN.md).
 
 ## Layout
 
@@ -48,6 +48,13 @@ Run it by hand with `.venv/bin/python -m scripts.seed_demo`.
 ## Images
 
 Uploads are validated (real file type, 5 MB, at most 10 per product), stripped of metadata and re-encoded as WebP. In development they are stored in `backend/uploads` and served at `/media`. In production the API **requires** Cloudflare R2 (`STORAGE_BACKEND=r2` plus the `R2_*` variables in `backend/.env.example`) and refuses to start without it.
+
+## The cart
+
+- **Guests:** the cart lives in the browser (ids and a bundle count, never prices).
+- **Signed in:** the cart is saved on the server. On sign-in the account's cart is fetched first, then the guest cart is merged into it in one request (the same offer adds its bundles, never above 99) and the local copy is cleared. Nothing is saved before that first fetch has finished.
+- **Prices:** every price on the cart page comes from `POST /api/v1/cart/quote`. A line whose offer was removed is flagged and left out of the total.
+- Checkout, payment and orders are out of scope.
 
 ## Languages
 

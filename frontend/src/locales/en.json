@@ -257,6 +257,33 @@
     "notFoundBody": "It may have been removed, or it isn't on sale right now.",
     "gallery": "Product pictures",
     "showImage": "Show picture {{number}}",
-    "descriptionTitle": "About this product"
+    "descriptionTitle": "About this product",
+    "viewCart": "View cart"
+  },
+  "cart": {
+    "title": "Your cart",
+    "empty": "Your cart is empty",
+    "emptyHint": "Add a bundle from the shop and it will show up here.",
+    "browse": "Browse products",
+    "remove": "Remove",
+    "removeLabel": "Remove {{name}} from the cart",
+    "bundlesFor": "Number of bundles for {{name}}",
+    "perBundle": "{{price}} per bundle",
+    "summaryTitle": "Cart summary",
+    "summaryBundles": "Bundles",
+    "summaryPacks": "Packs",
+    "unavailable": "This offer is no longer available, so it is not in your total.",
+    "invalid": "This quantity can't be priced, so it is not in your total.",
+    "excluded": "Lines not in the total: {{count}}",
+    "saveGuest": "Your cart is kept in this browser.",
+    "saveGuestCta": "Sign in to keep it on all your devices.",
+    "saved": "Saved to your account.",
+    "saving": "Saving…",
+    "saveError": "We couldn't save your cart. What you see here is what the server has now.",
+    "loadingCart": "Loading your cart…",
+    "loadError": "We couldn't load your cart.",
+    "noCheckout": "Checkout isn't part of this demo.",
+    "continue": "Continue shopping",
+    "bundleCount": "Bundles in your cart: {{count}}"
   }
 }

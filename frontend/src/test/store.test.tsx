@@ -261,7 +261,7 @@ test('pagination moves between pages', async () => {
 
 // ------------------------------------------------------------------ quick add
 
-const cartPill = () => screen.getByText('Cart').closest('[role="status"]') as HTMLElement
+const cartPill = () => screen.getByText('Cart').closest('a') as HTMLElement
 const stored = () => JSON.parse(localStorage.getItem('cart:v1') ?? '{"lines":[]}').lines
 
 test('quick add puts one bundle of the chosen offer in the cart and shows the count', async () => {

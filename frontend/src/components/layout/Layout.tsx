@@ -68,15 +68,15 @@ export default function Layout() {
               </>
             )}
             {cart.count > 0 && (
-              <span
-                role="status"
-                className="inline-flex items-center gap-1.5 rounded-md bg-primary-soft px-2.5 py-1.5 font-medium text-primary-strong"
+              <Link
+                to="/cart"
+                className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-primary-soft px-2.5 py-1.5 font-medium text-primary-strong hover:bg-primary-soft/70"
               >
                 {t('nav.cart')}
                 <span className="rounded bg-primary px-1.5 text-xs leading-5 text-white tabular-nums">
                   {cart.count}
                 </span>
-              </span>
+              </Link>
             )}
             <LanguageSwitcher />
           </div>

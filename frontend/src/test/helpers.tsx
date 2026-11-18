@@ -1,4 +1,5 @@
 import { render } from '@testing-library/react'
+import { StrictMode } from 'react'
 import { MemoryRouter } from 'react-router'
 import { vi } from 'vitest'
 import App from '../App'
@@ -37,16 +38,18 @@ export function mockApi(routes: Record<string, Handler>) {
   return calls
 }
 
-export function renderApp(path = '/') {
-  return render(
+export function renderApp(path = '/', options: { strict?: boolean } = {}) {
+  const tree = (
     <MemoryRouter initialEntries={[path]}>
       <AuthProvider>
         <CartProvider>
           <App />
         </CartProvider>
       </AuthProvider>
-    </MemoryRouter>,
+    </MemoryRouter>
   )
+  // React's development double-run of effects; the real app runs in StrictMode.
+  return render(options.strict ? <StrictMode>{tree}</StrictMode> : tree)
 }
 
 export const customer = { id: 1, email: 'c@shop.example', full_name: 'Cara Customer', role: 'customer' }
@@ -184,3 +187,86 @@ export function storeRoutes(products: unknown[], over: Record<string, Handler> =
 
 /** Formatted money as Intl writes it (a no-break space after "KWD"), as a regex-safe matcher. */
 export const kwd = (amount: string) => new RegExp(`KWD\\s${amount.replace('.', '\\.')}`)
+
+
+// ---- the cart ----
+export interface CatalogTier {
+  product_id: number
+  name: string
+  label: string
+  units: number
+  price: number
+}
+
+export const catalog: Record<number, CatalogTier> = {
+  11: { product_id: 7, name: 'Nitrile Examination Gloves', label: '1 pack', units: 1, price: 5500 },
+  12: { product_id: 7, name: 'Nitrile Examination Gloves', label: '4 packs', units: 4, price: 19500 },
+  13: { product_id: 7, name: 'Nitrile Examination Gloves', label: '12 packs', units: 12, price: 55000 },
+  41: { product_id: 15, name: 'Sterile Gauze Pads', label: '4 packs', units: 4, price: 6250 },
+}
+
+/** A fake of POST /cart/quote that prices exactly like the server: bundles x the bundle price. */
+export function quoteHandler(cat: Record<number, CatalogTier> = catalog): Handler {
+  return (init) => {
+    const { lines } = JSON.parse(String(init?.body)) as {
+      lines: { product_id: number; tier_id: number; bundles: number }[]
+    }
+    let line_count = 0, bundle_count = 0, pack_count = 0, total_fils = 0
+    const problems: { code: string; index: number }[] = []
+    const out = lines.map((l, index) => {
+      const base = { ...l, product_name: null, tier_label: null, image_url: null, image_alt: null, units: null, bundle_price_fils: null, pack_quantity: null, line_total_fils: null }
+      if (l.bundles < 1 || l.bundles > 99) {
+        problems.push({ code: 'invalid_bundles', index })
+        return { ...base, status: 'invalid' }
+      }
+      const t = cat[l.tier_id]
+      if (!t || t.product_id !== l.product_id) {
+        problems.push({ code: 'unavailable', index })
+        return { ...base, status: 'unavailable' }
+      }
+      line_count += 1
+      bundle_count += l.bundles
+      pack_count += l.bundles * t.units
+      total_fils += l.bundles * t.price
+      return {
+        ...base,
+        status: 'ok',
+        product_name: t.name,
+        tier_label: t.label,
+        image_url: `http://img.test/${t.product_id}.svg`,
+        image_alt: t.name,
+        units: t.units,
+        bundle_price_fils: t.price,
+        pack_quantity: l.bundles * t.units,
+        line_total_fils: l.bundles * t.price,
+      }
+    })
+    return { body: { lines: out, totals: { line_count, bundle_count, pack_count, total_fils }, problems } }
+  }
+}
+
+export const cartLine = (product_id: number, tier_id: number, bundles: number) => ({ product_id, tier_id, bundles })
+export const seedLocalCart = (lines: unknown[]) => localStorage.setItem('cart:v1', JSON.stringify({ owner: null, lines }))
+export const localLines = () => JSON.parse(localStorage.getItem('cart:v1') ?? '{"lines":[]}').lines
+
+/** A fake account cart on the server: GET, PUT and merge behave like the real endpoints. */
+export function serverCart(initial: { product_id: number; tier_id: number; bundles: number }[] = []) {
+  const state = { lines: initial.map((l) => ({ ...l })) }
+  const routes: Record<string, Handler> = {
+    'GET /api/v1/me/cart': () => ({ body: { lines: state.lines } }),
+    'PUT /api/v1/me/cart': (init) => {
+      state.lines = JSON.parse(String(init?.body)).lines
+      return { body: { lines: state.lines } }
+    },
+    'POST /api/v1/me/cart/merge': (init) => {
+      const incoming = JSON.parse(String(init?.body)).lines as typeof state.lines
+      for (const l of incoming) {
+        const same = state.lines.find((x) => x.tier_id === l.tier_id)
+        if (same) same.bundles = Math.min(99, same.bundles + l.bundles)
+        else state.lines.push({ ...l })
+      }
+      return { body: { lines: state.lines } }
+    },
+  }
+  return { state, routes }
+}

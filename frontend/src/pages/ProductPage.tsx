@@ -152,7 +152,7 @@ function ProductView({ product }: { product: StoreProductDetail }) {
           <button
             type="button"
             className="btn btn-primary h-12 w-full text-base"
-            disabled={bundles === null}
+            disabled={bundles === null || cart.status === 'loading'}
             onClick={() => {
               if (bundles === null) return
               cart.add(product.id, tier.id, bundles)
@@ -161,7 +161,14 @@ function ProductView({ product }: { product: StoreProductDetail }) {
           >
             {t('store.addToCart')}
           </button>
-          {added && <Notice>{added}</Notice>}
+          {added && (
+            <Notice>
+              {added}{' '}
+              <Link to="/cart" className="font-medium underline">
+                {t('product.viewCart')}
+              </Link>
+            </Notice>
+          )}
         </div>
       </div>
     </div>
