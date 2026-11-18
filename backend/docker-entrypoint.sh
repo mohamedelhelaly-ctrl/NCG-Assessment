@@ -16,5 +16,8 @@ done
 
 # Optional, idempotent seeding: a failure is logged but never stops the server.
 python -m scripts.seed_admin || echo "seed_admin failed (non-fatal)"
+if [ "$SEED_DEMO" = "true" ]; then
+  python -m scripts.seed_demo || echo "seed_demo failed (non-fatal)"
+fi
 
 exec uvicorn app.main:app --host 0.0.0.0 --port "${PORT:-8000}" --proxy-headers --forwarded-allow-ips "*"

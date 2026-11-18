@@ -1,21 +1,32 @@
+from pathlib import Path
+
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import models  # noqa: F401  (registers mappers)
-from app.config import get_settings
+from app.config import get_settings, validate_settings
 from app.core.errors import register_error_handlers
+from app.core.permissions import require_module
 from app.core.rate_limit import limiter
 from app.database import get_db
-from app.routers import auth
+from app.routers import (
+    admin_brands,
+    admin_categories,
+    admin_images,
+    admin_products,
+    admin_tiers,
+    auth,
+    brands,
+    categories,
+    products,
+)
 
 settings = get_settings()
 
-if settings.is_production and (
-    settings.jwt_secret.startswith(("dev-only", "change-me")) or len(settings.jwt_secret) < 32
-):
-    raise RuntimeError("JWT_SECRET must be set to a random value of at least 32 characters")
+validate_settings(settings)
 
 app = FastAPI(title="Shop API", version="0.1.0")
 app.state.limiter = limiter
@@ -29,7 +40,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth.router, prefix="/api/v1")
+API = "/api/v1"
+app.include_router(auth.router, prefix=API)
+
+# Public storefront reads
+for public_router in (brands.router, categories.router, products.router):
+    app.include_router(public_router, prefix=API)
+
+# Admin area: every router is guarded here, so access control is visible in one place.
+admin_guard = [Depends(require_module("catalog_admin", "write"))]
+for admin_router in (
+    admin_brands.router,
+    admin_categories.router,
+    admin_products.router,
+    admin_tiers.router,
+    admin_images.router,
+):
+    app.include_router(admin_router, prefix=API, dependencies=admin_guard)
+
+# In development, uploaded images are served from disk. Production uses R2 URLs.
+if settings.storage_backend == "local":
+    Path(settings.uploads_dir).mkdir(parents=True, exist_ok=True)
+    app.mount("/media", StaticFiles(directory=settings.uploads_dir), name="media")
 
 
 @app.get("/healthz", tags=["health"])

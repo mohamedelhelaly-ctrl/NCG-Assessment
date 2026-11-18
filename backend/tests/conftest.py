@@ -32,10 +32,11 @@ command.upgrade(Config(str(Path(__file__).parent.parent / "alembic.ini")), "head
 from sqlalchemy import text  # noqa: E402
 
 from app.core.rate_limit import limiter  # noqa: E402
-from app.core.security import hash_password  # noqa: E402
+from app.core.security import create_access_token, hash_password  # noqa: E402
 from app.crud.user import user_crud  # noqa: E402
 from app.database import SessionLocal  # noqa: E402
 from app.main import app  # noqa: E402
+from app.services.storage import StorageBackend, get_storage  # noqa: E402
 
 limiter.enabled = False  # tests that exercise rate limiting switch it on explicitly
 
@@ -43,7 +44,9 @@ limiter.enabled = False  # tests that exercise rate limiting switch it on explic
 @pytest_asyncio.fixture(autouse=True)
 async def clean_db():
     async with SessionLocal() as db:
-        await db.execute(text("TRUNCATE users RESTART IDENTITY CASCADE"))
+        await db.execute(
+            text("TRUNCATE users, products, brands, categories RESTART IDENTITY CASCADE")
+        )
         await db.commit()
     limiter.reset()
     yield
@@ -72,3 +75,39 @@ async def make_user(
 
 def auth_header(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
+
+
+class MemoryStorage(StorageBackend):
+    """In-memory image storage so tests never touch disk or the network."""
+
+    def __init__(self):
+        self.files: dict[str, bytes] = {}
+
+    async def save(self, key, data, content_type):
+        self.files[key] = data
+
+    async def delete(self, key):
+        self.files.pop(key, None)
+
+    def url(self, key):
+        return f"http://storage.test/{key}"
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def storage():
+    store = MemoryStorage()
+    app.dependency_overrides[get_storage] = lambda: store
+    yield store
+    app.dependency_overrides.pop(get_storage, None)
+
+
+@pytest_asyncio.fixture
+async def admin_headers():
+    admin = await make_user("admin@shop.example", role="admin")
+    return auth_header(create_access_token(admin.id))
+
+
+@pytest_asyncio.fixture
+async def customer_headers():
+    customer = await make_user("customer@shop.example", role="customer")
+    return auth_header(create_access_token(customer.id))
