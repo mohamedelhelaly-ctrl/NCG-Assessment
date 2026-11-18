@@ -14,6 +14,7 @@ until alembic upgrade head; do
   sleep 2
 done
 
-# Seeding (admin, demo data) is added in M1 and M2.
+# Optional, idempotent seeding: a failure is logged but never stops the server.
+python -m scripts.seed_admin || echo "seed_admin failed (non-fatal)"
 
 exec uvicorn app.main:app --host 0.0.0.0 --port "${PORT:-8000}" --proxy-headers --forwarded-allow-ips "*"

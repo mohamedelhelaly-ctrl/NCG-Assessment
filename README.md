@@ -2,7 +2,7 @@
 
 A storefront and admin area for a small catalog where each product has several **bundle offers** (pricing tiers), in English and Arabic.
 
-Status: **M0** (skeleton, health check, CI). See [docs/](docs/) for the [requirements](docs/REQUIREMENTS_DRAFT.md) and the [design](docs/DESIGN.md).
+Status: **M1** (skeleton, health check, CI, accounts with sign up, login and roles). See [docs/](docs/) for the [requirements](docs/REQUIREMENTS_DRAFT.md) and the [design](docs/DESIGN.md).
 
 ## Layout
 
