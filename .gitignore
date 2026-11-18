@@ -221,3 +221,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+setup/
+.claude/skills/
+
+
+# Project
+node_modules/
+frontend/dist/
+backend/uploads/
+.taste-skill/
+.envrc
