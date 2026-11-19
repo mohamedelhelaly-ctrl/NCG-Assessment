@@ -50,9 +50,9 @@ test('two purchases of the 4-pack offer is 2 x 4 packs = 8 packs and KWD 39.000 
   await openCart([gloves4])
   await screen.findByText('2 × 4 packs')
   const summary = screen.getByRole('complementary')
-  expect(within(summary).getByText(kwd('39.000'))).toBeInTheDocument()
-  expect(within(summary).getByText('Bundles').nextElementSibling).toHaveTextContent('2')
-  expect(within(summary).getByText('Packs').nextElementSibling).toHaveTextContent('8') // not 2, not 39
+  expect(within(summary).getByText('Total').nextElementSibling).toHaveTextContent(kwd('39.000'))
+  // the receipt row: the offer, bundles x the bundle price, and the line total
+  expect(within(summary).getByText(/4 packs · 2 × KWD\s19\.500/)).toBeInTheDocument()
 })
 
 test('different offers of the same product are separate lines with their own totals', async () => {
@@ -65,12 +65,19 @@ test('different offers of the same product are separate lines with their own tot
   expect(within(row('Nitrile Examination Gloves', 1)).getByText('1 × 12 packs')).toBeInTheDocument()
 })
 
-test('the summary adds up bundles, packs and the total from the server prices', async () => {
+test('the summary is a receipt: one row per line with its own total, then the total', async () => {
   await openCart([gloves4, gloves12, gauze4])
   await screen.findByText('3 × 4 packs')
   const summary = within(screen.getByRole('complementary'))
-  expect(summary.getByText('Bundles').nextElementSibling).toHaveTextContent('6') // 2 + 1 + 3
-  expect(summary.getByText('Packs').nextElementSibling).toHaveTextContent('32') // 8 + 12 + 12
+  const rows = summary.getAllByRole('listitem')
+  expect(rows).toHaveLength(3)
+  expect(rows[0]).toHaveTextContent('Nitrile Examination Gloves')
+  expect(rows[0]).toHaveTextContent(/4 packs · 2 × KWD\s19\.500\s*KWD\s39\.000/)
+  expect(rows[1]).toHaveTextContent(/12 packs · 1 × KWD\s55\.000\s*KWD\s55\.000/)
+  expect(rows[2]).toHaveTextContent(/KWD\s18\.750$/)
+  // bundles and packs of different products are never added together
+  expect(summary.queryByText('Bundles')).not.toBeInTheDocument()
+  expect(summary.queryByText('Packs')).not.toBeInTheDocument()
   expect(summary.getByText('Total').nextElementSibling).toHaveTextContent(kwd('112.750')) // 39 + 55 + 18.75
 })
 
@@ -89,7 +96,9 @@ test('the plus button raises the bundle count and the total follows the server',
   await userEvent.click(screen.getByRole('button', { name: 'More bundles' }))
   expect(await screen.findByText('3 × 4 packs')).toBeInTheDocument()
   expect(await screen.findByText('Total packs: 12')).toBeInTheDocument()
-  await waitFor(() => expect(within(screen.getByRole('complementary')).getByText(kwd('58.500'))).toBeInTheDocument())
+  await waitFor(() =>
+    expect(within(screen.getByRole('complementary')).getByText('Total').nextElementSibling).toHaveTextContent(kwd('58.500')),
+  )
   expect(localLines()).toEqual([cartLine(7, 12, 3)])
   expect(JSON.parse(String(callsTo(calls, QUOTE).at(-1)!.init!.body)).lines[0].bundles).toBe(3)
 })
@@ -161,7 +170,9 @@ test('removing a line takes it out of the cart and the total', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Remove Nitrile Examination Gloves from the cart' }))
   await waitFor(() => expect(screen.queryByText('2 × 4 packs')).not.toBeInTheDocument())
   expect(localLines()).toEqual([gauze4])
-  await waitFor(() => expect(within(screen.getByRole('complementary')).getByText(kwd('18.750'))).toBeInTheDocument())
+  await waitFor(() =>
+    expect(within(screen.getByRole('complementary')).getByText('Total').nextElementSibling).toHaveTextContent(kwd('18.750')),
+  )
 })
 
 test('removing the last line shows the empty cart', async () => {
@@ -236,13 +247,13 @@ test('a guest is told the cart is kept in this browser and invited to sign in', 
   expect(screen.getByRole('link', { name: 'Sign in to keep it on all your devices.' })).toHaveAttribute('href', '/login')
 })
 
-test('a signed-in customer is told the cart is saved to the account', async () => {
+test('a signed-in customer does not see a save status, only the receipt', async () => {
   localStorage.setItem('auth:token', 'tok')
   const { routes } = serverCart([gloves4])
   mockApi({ ...healthy, 'GET /api/v1/auth/me': json(customer), ...routes, [QUOTE]: quoteHandler() })
   renderApp('/cart')
   expect(await screen.findByText('2 × 4 packs')).toBeInTheDocument()
-  expect(await screen.findByText('Saved to your account.')).toBeInTheDocument()
+  expect(screen.queryByText('Saved to your account.')).not.toBeInTheDocument()
   expect(screen.queryByText('Your cart is kept in this browser.')).not.toBeInTheDocument()
 })
 
@@ -291,4 +302,19 @@ test('in Arabic the cart is translated, mirrored, and keeps Latin digits and the
   expect(screen.getByRole('link', { name: /^السلة\s*2$/ })).toHaveAttribute('href', '/cart')
   expect(screen.getByRole('button', { name: 'إزالة Nitrile Examination Gloves من السلة' })).toBeInTheDocument()
   await waitFor(() => expect(document.documentElement.dir).toBe('rtl'))
+})
+
+test('Clear cart asks first, then empties the cart', async () => {
+  await openCart([gloves4, gauze4])
+  await screen.findByText('2 × 4 packs')
+  await userEvent.click(screen.getByRole('button', { name: 'Clear cart' }))
+  const dialog = await screen.findByRole('dialog')
+  expect(dialog).toHaveTextContent('Clear your cart?')
+  await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+  expect(screen.getByText('2 × 4 packs')).toBeInTheDocument() // cancelling keeps everything
+
+  await userEvent.click(screen.getByRole('button', { name: 'Clear cart' }))
+  await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Clear cart' }))
+  expect(await screen.findByText('Your cart is empty')).toBeInTheDocument()
+  expect(JSON.parse(localStorage.getItem('cart:v1') ?? '{"lines":[]}').lines).toEqual([])
 })

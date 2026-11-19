@@ -54,3 +54,12 @@ export function CheckIcon({ className = 'size-6' }: { className?: string }) {
     </svg>
   )
 }
+
+/** Points to the end of the line (right in English); mirror it in right-to-left with rtl:-scale-x-100. */
+export function ChevronIcon({ className = 'size-6' }: { className?: string }) {
+  return (
+    <svg {...base} strokeWidth={2.25} className={className}>
+      <path d="m9 5 7 7-7 7" />
+    </svg>
+  )
+}

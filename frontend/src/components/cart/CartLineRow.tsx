@@ -4,7 +4,6 @@ import { formatKwd } from '../../lib/money'
 import type { CartLine } from '../../lib/cartContext'
 import type { QuoteLine } from '../../lib/types'
 import PackGlyph from '../ui/PackGlyph'
-import BundleBlocks from './BundleBlocks'
 import LineStepper from './LineStepper'
 
 interface Props {
@@ -15,7 +14,8 @@ interface Props {
   onRemove: () => void
 }
 
-const frame = 'grid grid-cols-[5.5rem_minmax(0,1fr)] gap-x-4 gap-y-3 p-4 sm:grid-cols-[6.5rem_minmax(0,1fr)_auto] sm:gap-x-5'
+// The picture column is about as wide as a line is tall, so the square picture fills the line's height.
+const frame = 'grid grid-cols-[6.5rem_minmax(0,1fr)] gap-x-4 gap-y-3 p-4 sm:grid-cols-[9rem_minmax(0,1fr)_auto] sm:gap-x-5'
 
 export default function CartLineRow({ line, quote, onBundles, onRemove }: Props) {
   const { t, i18n } = useTranslation()
@@ -25,7 +25,7 @@ export default function CartLineRow({ line, quote, onBundles, onRemove }: Props)
   if (!quote) {
     return (
       <li className={frame} aria-hidden="true">
-        <div className="aspect-[4/3] rounded-lg bg-line/50" />
+        <div className="aspect-square rounded-lg bg-line/50" />
         <div className="space-y-2">
           <div className="h-5 w-2/3 rounded bg-line/50" />
           <div className="h-4 w-1/3 rounded bg-line/50" />
@@ -49,7 +49,6 @@ export default function CartLineRow({ line, quote, onBundles, onRemove }: Props)
   }
 
   const name = quote.product_name ?? ''
-  const units = quote.units ?? 1
   return (
     <li className={frame}>
       <Link to={`/products/${line.product_id}`} tabIndex={-1} aria-hidden="true" className="block self-start">
@@ -60,19 +59,19 @@ export default function CartLineRow({ line, quote, onBundles, onRemove }: Props)
             width={1200}
             height={900}
             loading="lazy"
-            className="aspect-[4/3] w-full rounded-lg object-cover"
+            className="aspect-square w-full rounded-xl object-cover"
           />
         ) : (
-          <div className="flex aspect-[4/3] items-center justify-center rounded-lg bg-primary-soft/60">
+          <div className="flex aspect-square items-center justify-center rounded-xl bg-primary-soft/60">
             <PackGlyph units={4} />
           </div>
         )}
       </Link>
 
-      <div className="min-w-0 space-y-3">
+      <div className="flex min-w-0 flex-col justify-center gap-3">
         <div>
-          <h2 className="font-semibold leading-snug">
-            <Link to={`/products/${line.product_id}`} className="hover:text-primary">
+          <h2 className="text-lg font-semibold leading-snug">
+            <Link to={`/products/${line.product_id}`} className="link-draw">
               <bdi>{name}</bdi>
             </Link>
           </h2>
@@ -81,7 +80,6 @@ export default function CartLineRow({ line, quote, onBundles, onRemove }: Props)
           </p>
         </div>
 
-        <BundleBlocks units={units} bundles={line.bundles} />
         <p className="text-sm">
           <bdi className="font-medium">{t('product.summary', { bundles: line.bundles, label: quote.tier_label })}</bdi>
           <span className="text-muted"> · </span>

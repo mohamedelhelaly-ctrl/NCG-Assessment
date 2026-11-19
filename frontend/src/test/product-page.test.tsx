@@ -58,7 +58,7 @@ test('the gallery shows the first picture and switches when a thumbnail is chose
   expect(main()).toHaveAttribute('src', 'http://img.test/7a.svg')
   expect(main()).toHaveAttribute('alt', 'Front view')
 
-  const thumbs = within(gallery).getAllByRole('button')
+  const thumbs = within(gallery).getAllByRole('button', { name: /^Show picture/ })
   expect(thumbs).toHaveLength(2)
   expect(thumbs[0]).toHaveAttribute('aria-pressed', 'true')
   await userEvent.click(within(gallery).getByRole('button', { name: 'Show picture 2' }))
@@ -66,7 +66,20 @@ test('the gallery shows the first picture and switches when a thumbnail is chose
   expect(within(gallery).getByRole('button', { name: 'Show picture 2' })).toHaveAttribute('aria-pressed', 'true')
 })
 
-test('a single picture shows no thumbnails', async () => {
+test('the arrows move to the next and previous picture and wrap around', async () => {
+  await openProduct()
+  const gallery = screen.getByRole('group', { name: 'Product pictures' })
+  const main = () => gallery.querySelectorAll('img')[0]
+  await userEvent.click(within(gallery).getByRole('button', { name: 'Next picture' }))
+  expect(main()).toHaveAttribute('src', 'http://img.test/7b.svg')
+  expect(within(gallery).getByRole('button', { name: 'Show picture 2' })).toHaveAttribute('aria-pressed', 'true')
+  await userEvent.click(within(gallery).getByRole('button', { name: 'Next picture' })) // past the last: first again
+  expect(main()).toHaveAttribute('src', 'http://img.test/7a.svg')
+  await userEvent.click(within(gallery).getByRole('button', { name: 'Previous picture' })) // before the first: last
+  expect(main()).toHaveAttribute('src', 'http://img.test/7b.svg')
+})
+
+test('a single picture shows no thumbnails and no arrows', async () => {
   await openProduct({ images: [{ id: 1, url: 'http://img.test/only.svg', alt: 'Only view' }] })
   expect(within(screen.getByRole('group', { name: 'Product pictures' })).queryAllByRole('button')).toHaveLength(0)
 })

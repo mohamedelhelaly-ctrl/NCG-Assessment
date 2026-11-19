@@ -42,6 +42,7 @@ test('Arabic strings are really Arabic, except for the allowed Latin ones', () =
     'nav.switchLanguage',
     'admin.tiers.labelExample',
     'app.name',
+    'cart.receiptLine', // only placeholders, a dot and a multiplication sign
     'product.summary', // only placeholders and a multiplication sign
   ])
   for (const [key, value] of Object.entries(arabic)) {

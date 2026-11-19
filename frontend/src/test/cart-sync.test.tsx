@@ -262,7 +262,6 @@ test('a signed-in change is saved to the server as the whole cart, after a short
   await waitFor(() => expect(callsTo(calls, PUT)).toHaveLength(1))
   expect(JSON.parse(String(callsTo(calls, PUT)[0].init!.body))).toEqual({ lines: [gloves4(3), gauze4(1)] })
   expect(server.state.lines).toEqual([gloves4(3), gauze4(1)])
-  expect(await screen.findByText('Saved to your account.')).toBeInTheDocument()
   expect(localLines()).toEqual([]) // a signed-in cart is not kept in the browser as well
 })
 
@@ -277,15 +276,6 @@ test('several quick changes are sent as one save with the latest cart', async ()
   await waitFor(() => expect(callsTo(calls, PUT)).toHaveLength(1))
   expect(server.state.lines).toEqual([gloves4(4)])
   expect(callsTo(calls, PUT)).toHaveLength(1)
-})
-
-test('shows "Saving…" while a change is waiting or on its way, then "Saved"', async () => {
-  signedIn([gloves4(1)])
-  renderApp('/cart')
-  await screen.findByText('Saved to your account.')
-  await userEvent.click(screen.getByRole('button', { name: 'More bundles' }))
-  expect(await screen.findByText('Saving…')).toBeInTheDocument()
-  expect(await screen.findByText('Saved to your account.')).toBeInTheDocument()
 })
 
 test('a change made during a save is sent straight after it, never at the same time', async () => {
@@ -364,7 +354,7 @@ test('a failed save reloads what the server has, says so, and offers a retry', a
   expect(await screen.findByText('2 × 4 packs')).toBeInTheDocument()
   fail = false
   await userEvent.click(within(screen.getByRole('alert')).getByRole('button', { name: 'Try again' }))
-  expect(await screen.findByText('Saved to your account.')).toBeInTheDocument()
+  await waitFor(() => expect(screen.queryByText(/We couldn't save your cart/)).not.toBeInTheDocument())
 })
 
 test('a failed load of the account cart is explained and can be retried', async () => {

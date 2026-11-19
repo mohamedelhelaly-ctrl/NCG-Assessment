@@ -254,7 +254,9 @@
     "gallery": "صور المنتج",
     "showImage": "عرض الصورة {{number}}",
     "descriptionTitle": "عن هذا المنتج",
-    "viewCart": "عرض السلة"
+    "viewCart": "عرض السلة",
+    "previousImage": "الصورة السابقة",
+    "nextImage": "الصورة التالية"
   },
   "cart": {
     "title": "سلتك",
@@ -266,21 +268,21 @@
     "bundlesFor": "عدد الحزم لـ {{name}}",
     "perBundle": "{{price}} للحزمة",
     "summaryTitle": "ملخص السلة",
-    "summaryBundles": "الحزم",
-    "summaryPacks": "العبوات",
     "unavailable": "هذا العرض لم يعد متاحًا، لذلك لا يدخل في إجماليك.",
     "invalid": "لا يمكن تسعير هذه الكمية، لذلك لا تدخل في إجماليك.",
     "excluded": "أسطر غير داخلة في الإجمالي: {{count}}",
     "saveGuest": "سلتك محفوظة في هذا المتصفح.",
     "saveGuestCta": "سجّل الدخول لتحتفظ بها على كل أجهزتك.",
-    "saved": "محفوظة في حسابك.",
-    "saving": "جارٍ الحفظ…",
     "saveError": "تعذّر حفظ سلتك. ما تراه هنا هو ما لدى الخادم الآن.",
     "loadingCart": "جارٍ تحميل سلتك…",
     "loadError": "تعذّر تحميل سلتك.",
     "noCheckout": "إتمام الشراء ليس جزءًا من هذا العرض التجريبي.",
     "continue": "متابعة التسوق",
-    "bundleCount": "عدد الحزم في سلتك: {{count}}"
+    "bundleCount": "عدد الحزم في سلتك: {{count}}",
+    "receiptLine": "{{label}} · {{bundles}} × {{price}}",
+    "clear": "إفراغ السلة",
+    "clearTitle": "إفراغ السلة؟",
+    "clearBody": "ستتم إزالة كل المنتجات من سلتك. عدد الحزم في سلتك: {{count}}."
   },
   "error": {
     "title": "حدث خطأ ما",

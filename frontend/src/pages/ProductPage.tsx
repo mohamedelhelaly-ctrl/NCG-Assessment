@@ -6,6 +6,7 @@ import OfferList from '../components/store/OfferList'
 import ProductImage from '../components/store/ProductImage'
 import { ProductPageSkeleton } from '../components/store/Skeletons'
 import { ErrorState, Notice } from '../components/ui/Feedback'
+import { ChevronIcon } from '../components/ui/Icons'
 import { useApi } from '../hooks/useApi'
 import { useDocumentTitle } from '../hooks/usePageTitle'
 import { api, ApiError } from '../lib/api'
@@ -14,6 +15,9 @@ import { errorText } from '../lib/errors'
 import { formatKwd } from '../lib/money'
 import { lineTotal, packCount, parseBundles } from '../lib/pricing'
 import type { StoreProductDetail } from '../lib/types'
+
+const arrow =
+  'absolute top-1/2 inline-flex size-11 -translate-y-1/2 items-center justify-center rounded-full bg-ink/10 text-white opacity-0 drop-shadow-[0_1px_2px_rgb(0_0_0/0.45)] transition-[opacity,background-color] duration-200 hover:bg-ink/35 focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100'
 
 export default function ProductPage() {
   const { t } = useTranslation()
@@ -81,7 +85,30 @@ function ProductView({ product }: { product: StoreProductDetail }) {
   return (
     <div className="grid gap-x-12 gap-y-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
       <div className="min-w-0 space-y-3" role="group" aria-label={t('product.gallery')}>
-        <ProductImage image={shown} priority />
+        <div className="group relative">
+          <ProductImage image={shown} priority />
+          {images.length > 1 && (
+            <>
+              {/* 90% see-through arrows that appear on hover or keyboard focus (always, faintly, on touch screens) */}
+              <button
+                type="button"
+                aria-label={t('product.previousImage')}
+                onClick={() => setImageIndex((imageIndex - 1 + images.length) % images.length)}
+                className={`${arrow} start-3`}
+              >
+                <ChevronIcon className="size-6 -scale-x-100 rtl:scale-x-100" />
+              </button>
+              <button
+                type="button"
+                aria-label={t('product.nextImage')}
+                onClick={() => setImageIndex((imageIndex + 1) % images.length)}
+                className={`${arrow} end-3`}
+              >
+                <ChevronIcon className="size-6 rtl:-scale-x-100" />
+              </button>
+            </>
+          )}
+        </div>
         {images.length > 1 && (
           <ul className="flex flex-wrap gap-2">
             {images.map((image, index) => (
