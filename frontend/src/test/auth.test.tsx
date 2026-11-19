@@ -132,3 +132,26 @@ test('on smaller screens the header menu holds Manage Store, Sign out and the la
   expect(await screen.findByRole('heading', { name: 'Admin area' })).toBeInTheDocument()
   expect(document.getElementById('header-menu')).toBeNull()
 })
+
+test('registering rejects an email that is not in email format, before any request', async () => {
+  const calls = mockApi({})
+  renderApp('/register')
+  await userEvent.type(screen.getByLabelText('Full name'), 'Sara')
+  await userEvent.type(screen.getByLabelText('Email'), 'sara@shop')
+  await userEvent.type(screen.getByLabelText('Password'), 'long enough password')
+  await userEvent.click(screen.getByRole('button', { name: 'Create account' }))
+  expect(screen.getByLabelText('Email')).toHaveAccessibleDescription(/valid email address/i)
+  expect(screen.getByLabelText('Email')).toBeInvalid()
+  expect(calls.some((c) => c.key.startsWith('POST'))).toBe(false)
+})
+
+test.each(['/login', '/register'])('%s can show and hide the password', async (path) => {
+  mockApi({})
+  renderApp(path)
+  const password = screen.getByLabelText('Password')
+  expect(password).toHaveAttribute('type', 'password')
+  await userEvent.click(screen.getByRole('button', { name: 'Show password' }))
+  expect(password).toHaveAttribute('type', 'text')
+  await userEvent.click(screen.getByRole('button', { name: 'Hide password' }))
+  expect(password).toHaveAttribute('type', 'password')
+})
