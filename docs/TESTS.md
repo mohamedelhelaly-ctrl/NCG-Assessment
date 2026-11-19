@@ -1,6 +1,6 @@
 # Tests
 
-**229 backend tests** (pytest, real PostgreSQL) and **292 frontend tests** (Vitest and Testing Library). Both suites also run in CI, together with ruff, oxlint, the migration round trip (`upgrade`, `downgrade`, `upgrade`, then `alembic check`) and the production build.
+**229 backend tests** (pytest, real PostgreSQL) and **303 frontend tests** (Vitest and Testing Library). Both suites also run in CI, together with ruff, oxlint, the migration round trip (`upgrade`, `downgrade`, `upgrade`, then `alembic check`) and the production build.
 
 Run them with `pytest` in `backend/` and `npm test` in `frontend/`. Tests never reach a real network: the frontend setup blocks `fetch`, and the backend uses a separate `shop_test` database and an in-memory image store.
 
@@ -23,7 +23,7 @@ Run them with `pytest` in `backend/` and `npm test` in `frontend/`. Tests never 
 | `test_seed_demo.py` | 14 | The 12 demo products with exact tiers and prices, safe SVG placeholders, idempotent seed, guarded reset |
 | `test_health.py` | 4 | Health check with a database ping; security headers on every response |
 
-## Frontend (292)
+## Frontend (303)
 
 | File | Tests | What it proves |
 |---|---|---|
@@ -31,15 +31,16 @@ Run them with `pytest` in `backend/` and `npm test` in `frontend/`. Tests never 
 | `lib/pricing.test.ts` | 28 | Bundle arithmetic, price per pack, best value, savings, bundle-count validation |
 | `lib/cart.test.tsx` | 22 | The guest cart: merge rules, 99 cap, persistence, damaged storage, several tabs, merge ids |
 | `locales/locales.test.ts` | 5 | English and Arabic have the same keys and placeholders |
-| `test/auth.test.tsx` | 8 | Sign in and out, guards, session restore, expired token |
+| `test/auth.test.tsx` | 14 | Sign in and out, guards, session restore, expired token, Continue as guest, the mobile header menu, registration rejects a badly formed email before any request, show/hide password on both forms, the reviewer credentials box on the sign-in page only |
 | `test/i18n.test.tsx` | 12 | Language switch, direction, title, persistence, `Accept-Language`, error translation |
 | `test/admin-named.test.tsx` | 13 | Brands and categories screens including the in-use message |
 | `test/admin-products.test.tsx` | 13 | Product list, URL filters, debounced search, pagination, delete |
 | `test/admin-product-form.test.tsx` | 29 | Create and edit, bilingual fields, tiers with exact fils, image upload and reorder, validation |
-| `test/store.test.tsx` | 30 | Listing, price ladder, filters, search, empty and error states, quick add, Arabic |
-| `test/product-page.test.tsx` | 27 | Product page, gallery, live totals (the brief's example), bundle-count validation, add to cart |
-| `test/cart-page.test.tsx` | 28 | Cart lines from the server quote, totals, stepper, remove, removed offers flagged, empty, loading and error states, Arabic |
-| `test/cart-sync.test.tsx` | 24 | Merge on sign-in exactly once (also under React's double effects), nothing saved before the first fetch, ordered saves, failures, sign-out, a lost merge answer retried safely |
+| `test/home.test.tsx` | 4 | Home page: store name, tagline and Shop now; the three top bundles by saving per pack and their cards; header links and the demo footer |
+| `test/store.test.tsx` | 30 | Listing, bundle chips and prices, the Category and Brand dropdowns (custom list, no counts, keyboard and outside click), search, empty and error states, quick add, Arabic |
+| `test/product-page.test.tsx` | 28 | Product page, gallery, live totals (the brief's example), bundle-count validation, add to cart |
+| `test/cart-page.test.tsx` | 29 | Cart lines from the server quote, the receipt summary and totals, stepper, remove, Clear cart with confirmation, removed offers flagged, empty, loading and error states, Arabic |
+| `test/cart-sync.test.tsx` | 23 | Merge on sign-in exactly once (also under React's double effects), nothing saved before the first fetch, ordered saves, failures, sign-out, a lost merge answer retried safely |
 | `test/polish.test.tsx` | 24 | One main landmark and one banner per page, heading order, skip link, focus on navigation, crash screen, favicon and security headers |
 
 ## Beyond the automated tests

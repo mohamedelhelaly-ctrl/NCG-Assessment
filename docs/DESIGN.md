@@ -1,6 +1,6 @@
 # Design: Medical E-Commerce with Multi-Tier Pricing
 
-Status: DRAFT v1. Implements [REQUIREMENTS_DRAFT.md](REQUIREMENTS_DRAFT.md) (IDs in brackets point there). Conventions follow [../ARCHITECTURE_OVERVIEW.md](../ARCHITECTURE_OVERVIEW.md) and [../PLAYBOOK.md](../PLAYBOOK.md).
+Status: implemented. Implements [REQUIREMENTS_DRAFT.md](REQUIREMENTS_DRAFT.md) (IDs in brackets point there). Conventions follow [../setup/ARCHITECTURE_OVERVIEW.md](../setup/ARCHITECTURE_OVERVIEW.md) and [../setup/PLAYBOOK.md](../setup/PLAYBOOK.md). The reasons behind the main choices are in [DECISIONS.md](DECISIONS.md).
 
 ---
 
@@ -30,31 +30,32 @@ project/
 ├── .env.example
 ├── .github/workflows/ci.yml
 ├── README.md
-├── docs/                         # REQUIREMENTS_DRAFT, DESIGN, TESTS
+├── docs/                         # REQUIREMENTS_DRAFT, DESIGN, DECISIONS, TESTS, UAT
 ├── backend/
 │   ├── Dockerfile  docker-entrypoint.sh  railway.json
 │   ├── requirements.txt  requirements-dev.txt  pyproject.toml  .env.example
 │   ├── alembic/versions/
 │   ├── app/
 │   │   ├── main.py  config.py  database.py  deps.py
-│   │   ├── core/        # security, permissions, money, errors, rate_limit, i18n
+│   │   ├── core/        # security, permissions, errors, rate_limit, i18n
 │   │   ├── models/      # user, brand, category, product, product_image, pricing_tier, cart
 │   │   ├── schemas/     # mirrors models; public (resolved language) and admin (both languages) variants
 │   │   ├── crud/        # one class per entity
 │   │   ├── routers/     # auth, brands, categories, products, cart, admin_brands, admin_categories,
 │   │   │                # admin_products, admin_tiers, admin_images
-│   │   └── services/    # quote, cart (merge), images, storage/ (base, local, r2), catalog_search
+│   │   └── services/    # quote, cart (merge), images, product_admin, catalog_view, storage/ (base, local, r2)
 │   ├── scripts/         # seed_admin, seed_demo
 │   └── tests/
 └── frontend/
     ├── vercel.json  .env.example
     └── src/
         ├── App.tsx      # all routes and guards
-        ├── lib/         # api, auth, cart, i18n, money, types
-        ├── hooks/       # useApi, useDebounce, usePageTitle
+        ├── lib/         # api, auth, cart, errors, i18n, money, pricing, tiers, types
+        ├── hooks/       # useApi, useDebounce, usePageTitle, useQuote
         ├── locales/     # en.json, ar.json
         ├── components/  # auth/, layout/, ui/, store/, admin/
-        └── pages/       # store/ (Home, Product, Cart, Login, Register), admin/ (Products, ProductForm, Brands, Categories)
+        └── pages/       # HomePage, StorePage, ProductPage, CartPage, LoginPage, RegisterPage, NotFoundPage;
+                         # admin/ (ProductsPage, ProductFormPage, BrandsPage, CategoriesPage, NamedPage)
 ```
 
 Layering: **routers → crud/services → models**. Routers hold no queries or business rules. Services know nothing about HTTP.
@@ -267,20 +268,22 @@ page load with token       GET /auth/me, then GET /me/cart; no PUT before it com
 | Products | 12, all active: 4 with one tier, 4 with two, 4 with three (for example Nitrile Examination Gloves: 1 pack 5.500, 4 packs 19.500, 12 packs 55.000 KWD) |
 | Arabic | none: the manager adds Arabic names, descriptions and labels in the admin area; until then the English text is shown in the Arabic view |
 | Images | one SVG placeholder per product (name centred on a plain background, tinted by category), stored through the normal storage backend as `products/{id}/placeholder.svg` |
-| Accounts | Admin from env, plus one demo customer (`DEMO_PASSWORD`). Credentials go in the README |
+| Accounts | Admin from env, plus one demo customer (`DEMO_PASSWORD`). The admin email and password are shown on the sign-in page; the customer password is sent with the submission. The README holds no credentials |
 
 **Reset.** `--reset` or `SEED_DEMO_RESET=true` deletes every product, tier, image row, brand and category (and the stored files, best effort) and then seeds. It is skipped when the marker brand already exists, so it can only replace a catalog that is not the demo one, and cannot wipe a seeded catalog on every restart.
 
 ## 10. Frontend structure
 
-- **Routes** (all in `App.tsx`): `/` home, `/products/:id`, `/cart`, `/login`, `/register`, `/admin` (redirects to `/admin/products`), `/admin/products`, `/admin/products/new`, `/admin/products/:id`, `/admin/brands`, `/admin/categories`, and a not-found route.
+- **Routes** (all in `App.tsx`): `/` home page (hero, top bundles), `/shop` the product listing with search and filters, `/products/:id`, `/cart`, `/login`, `/register`, `/admin` (redirects to `/admin/products`), `/admin/products`, `/admin/products/new`, `/admin/products/:id`, `/admin/brands`, `/admin/categories`, and a not-found route.
 - **API client** (`lib/api.ts`): typed `get/post/put/delete`, base URL from `VITE_API_URL`, token and `Accept-Language` injected, one `ApiError` type, a global 401 handler. Types in `lib/types.ts` mirror the backend schemas.
 - **State**: context only (auth, cart, language) plus page hooks. No global state library.
 - **List pages**: search is debounced and stale requests are cancelled. Filters live in the URL query string, so a filtered page can be reloaded and shared.
 - **Product page**: selecting a tier and a bundle count shows the line total and the pack count immediately, computed from the tier data already loaded (the same formula as the server); the server quote remains the source of truth in the cart.
 - **Admin forms**: English and Arabic inputs shown side by side, Arabic inputs set to `dir="rtl"`, a hint under each empty Arabic field [A11-A13]. Tier editor edits rows inline with a per-row save. Price inputs use the strict KWD parser.
 - **States**: every data view has loading, error with retry, and empty states [N7].
-- **Styling**: Tailwind tokens as CSS custom properties. The storefront look follows decision D22 (limited use of the taste skill). Admin and cart stay plain.
+- **Styling**: Tailwind v4 theme tokens as CSS custom properties. White with teal `#069494` for accents and darker teals `#057a7a` / `#045f5f` for filled buttons and small text, so contrast passes AA. IBM Plex Sans and IBM Plex Sans Arabic for text; Fraunces bold for the store name only. Designed with the `frontend-design` skill (D22).
+- **Header**: Shop on the left, the store name in the centre, Cart with its count, Sign in or the user's name and Sign out, Manage Store (admins) and the language switch on the right. Below 1024 px the right-hand actions fold into a menu panel that closes on Escape, an outside click or navigation.
+- **Added while styling** [C1a, C1b, C5a, C5b, C21a]: a home page with the three top bundles (biggest saving per pack, `topBundles` in `lib/pricing.ts`); Category and Brand filters as a custom dropdown (`components/ui/Dropdown.tsx`, a keyboard-accessible listbox, names without counts); a show/hide control on password fields (`components/auth/FormField.tsx`); an email format check on sign-up before any request; a demo credentials box on the sign-in page; a receipt-style cart summary and a Clear cart button with a confirmation; arrows on the product gallery.
 
 ## 11. Testing plan (detail goes in TESTS.md)
 
@@ -326,7 +329,7 @@ Same as the playbook, scaled down: Railway for the API and Postgres (root direct
 3. **Error shape** gains an optional `params` object (section 6).
 4. **Deleting the last tier of an active product** deactivates the product (section 8), which the requirements did not specify.
 5. **Seed images are SVG placeholders**, not photographs (section 7).
-6. **Fonts** (a Latin and an Arabic family) are chosen when the storefront is styled in M4. The Arabic font must support Arabic script and render well at small sizes.
+6. **Fonts:** IBM Plex Sans and IBM Plex Sans Arabic for all text (the Arabic family supports Arabic script and reads well at small sizes), and Fraunces bold for the store name only.
 
 ## 15. Decisions made while building
 
@@ -335,6 +338,6 @@ Same as the playbook, scaled down: Railway for the API and Postgres (root direct
 - **The shared "visible product" expression** aliases the tier table inside its `EXISTS`, so the same definition of "visible" works in every query, including the quote.
 - **Cart page shows nothing until every line is priced**, to avoid a half-empty summary flashing while the first prices arrive.
 - **The admin area is code-split** (lazy routes): customers never download it.
-- **Responsive and accessibility audit:** 14 pages × 3 widths × 2 languages in Chrome with axe; one `<main>` per page via the layout, a skip link, focus moved to the content on navigation, and a header that wraps instead of overflowing at 360px.
+- **Responsive and accessibility audit:** 14 pages × 3 widths × 2 languages in Chrome with axe; one `<main>` per page via the layout, a skip link, focus moved to the content on navigation, and a header whose actions fold into a menu below 1024 px so nothing overflows or becomes unreachable at 360px.
 - **Basic security headers** on every API response and on the static site.
 - **Known limitation accepted:** no "price changed" notice in the cart (C22); a removed offer is flagged.

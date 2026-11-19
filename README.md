@@ -3,19 +3,21 @@
 A storefront and an admin area for a small medical-supplies catalog. Every product can be sold in several **offers** (pricing tiers): a number of packs sold together for one total price. Customers pick an offer and how many bundles they want, and the server prices the cart. The interface is available in **English (default) and Arabic (right to left)**.
 
 - **Live site:** https://ncg-assessment-liard.vercel.app
-- **API:** https://ncg-assessment-production.up.railway.app (interactive docs at `/docs`)
-- **Admin area:** `/admin` on the live site (sign in with the admin account provided with the submission)
-- **Demo access:** the admin and demo customer credentials are supplied together with the submission; they are not stored in this repository.
+- **API:** https://ncg-assessment-production.up.railway.app/docs
+- **Admin area:** `/admin` on the live site, labelled **Manage Store** in the header once you are signed in as an admin
+- **Demo access:** the sign-in page shows the demo admin email and password in a "Reviewing this store?" box, so a reviewer can open Manage Store at once. They are public on purpose; see the known limitations. The demo customer password is supplied with the submission.
 
-See [docs/](docs/) for the [requirements](docs/REQUIREMENTS_DRAFT.md), the [design](docs/DESIGN.md) and the [tests overview](docs/TESTS.md).
+See [docs/](docs/) for the [requirements](docs/REQUIREMENTS_DRAFT.md), the [design](docs/DESIGN.md), the [decisions log](docs/DECISIONS.md), the [tests overview](docs/TESTS.md) and the [acceptance test checklist](docs/UAT.md).
 
 ## What it does
 
 **Customers (no account needed to browse and shop)**
-- Browse products with their images, brand, category and **all** pricing options; filter by brand and category (with counts); search by product, brand or category name in either language.
-- Product page: image gallery, choose an offer and a bundle count (1 to 99), see the total and total packs update.
-- Cart: separate lines per offer, change counts, remove, see line totals and a cart total priced by the server. A guest cart is kept in the browser; sign in and it moves to the account and merges with the account's cart.
-- Accounts: sign up, sign in, roles (customer, admin).
+- Home page with a hero and the three top bundles (the best saving per pack), leading to the shop at `/shop`.
+- Browse products with their images, brand, category and **all** pricing options; filter with the Category and Brand dropdowns (a styled, keyboard-friendly list); search by product, brand or category name in either language. Filters live in the address, so a filtered view can be shared.
+- Product page: image gallery (arrows and thumbnails when a product has several pictures), choose an offer and a bundle count (1 to 99), see the total and total packs update.
+- Cart: separate lines per offer, change counts, remove, see line totals and a cart total priced by the server (shown as a receipt), and a Clear cart button that asks first. A guest cart is kept in the browser; sign in and it moves to the account and merges with the account's cart.
+- Accounts: sign up (the email must be a valid address), sign in, a show/hide control on every password field, roles (customer, admin).
+- Works on a phone: below 1024 px the header actions fold into a menu, so Manage Store, Sign in/out and the language stay reachable.
 
 **Store manager (admin area)**
 - Create, edit and delete products, brands and categories. Add, edit and delete pricing tiers (packs per bundle and the bundle price) with no fixed number of tiers.
@@ -73,7 +75,7 @@ frontend/
     components/        layout, auth, store, cart, admin, ui
     pages/             storefront, cart, auth and admin/ pages
     locales/           en.json and ar.json (a test keeps them in step)
-docs/                  REQUIREMENTS_DRAFT.md, DESIGN.md, TESTS.md
+docs/                  REQUIREMENTS_DRAFT.md, DESIGN.md, DECISIONS.md, TESTS.md, UAT.md
 docker-compose.yml     PostgreSQL (and the API image) for local use
 ```
 
@@ -173,7 +175,7 @@ Every error uses one shape: `{"error": {"code", "message", "fields", "params"}}`
 
 | Brief requirement | Where |
 |---|---|
-| Home page: images, names, all pricing options; 1, 2 and 3 option products; brand and category lists and filters; open a product or add to cart | Storefront home (`/`) and the demo catalog |
+| Home page: images, names, all pricing options; 1, 2 and 3 option products; brand and category lists and filters; open a product or add to cart | Home (`/`), the shop (`/shop`) and the demo catalog |
 | Product page: info, images, brand, category, all options; choose offer and bundle count; automatic price; add to cart | `/products/:id` |
 | Cart: product, offer, bundles, line price; update and remove; totals; different offers as separate lines | `/cart` |
 | Admin: list, create, edit, delete products; brands and categories; add, edit, delete tiers; saved to a real database | `/admin` |
@@ -193,7 +195,8 @@ Every error uses one shape: `{"error": {"code", "message", "fields", "params"}}`
 
 - **Out of scope by the brief:** checkout, payment, delivery, orders and inventory management. The cart has no stock check, and the cart page says that checkout is not part of the demo.
 - **No notice when a price changes.** The cart always shows the current price, but it does not tell a customer that a price changed since they added an item. (A removed offer *is* flagged.)
-- **Accounts:** a single admin, created from environment variables; no user-management screen, password reset, email verification or refresh tokens (a session lasts 60 minutes).
+- **Accounts:** a single admin, created from environment variables; no user-management screen, password reset or change screen, email verification or refresh tokens (a session lasts 60 minutes). The seed never changes an existing admin, so changing `FIRST_ADMIN_PASSWORD` later has no effect on an account that already exists.
+- **Public demo credentials:** the admin email and password are shown on the sign-in page and are in the source, so anyone can open Manage Store and edit the demo catalog. Keep nothing real behind that account and change the password after review.
 - **Rate limiting** (sign-in and sign-up) is kept in memory per process, which is right for one server instance only.
 - **Pictures:** the demo products show generated SVG placeholders until real pictures are uploaded. Uploads accept JPEG, PNG and WebP only (not SVG), up to 5 MB and 10 per product.
 - **Arabic content:** the demo data has no Arabic text, so the English text is shown in the Arabic view until the manager adds translations.

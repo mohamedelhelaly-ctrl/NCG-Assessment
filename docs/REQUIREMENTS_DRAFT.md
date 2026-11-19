@@ -1,6 +1,6 @@
 # Requirements Draft: Medical E-Commerce with Multi-Tier Pricing
 
-Status: IMPLEMENTED (milestones M0 to M6). The one deliberate gap is C22's "repriced" notice, listed under known limitations in the README; everything else below is built and tested. IDs: **C** = customer, **A** = admin, **B** = business rule, **N** = non-functional, **D** = decision, **Q** = open question.
+Status: IMPLEMENTED (milestones M0 to M6). Known gaps: C22's "repriced" notice (listed under known limitations in the README), the repository rename (D7, not done yet) and the seed images (B13: one SVG placeholder per product instead of 2 to 3 images). Everything else below is built and tested. IDs: **C** = customer, **A** = admin, **B** = business rule, **N** = non-functional, **D** = decision, **Q** = open question.
 
 Source: the assessment brief plus the decisions agreed in review (see section 8). Items marked *(added)* go beyond the brief on purpose.
 
@@ -30,14 +30,21 @@ A small medical e-commerce app. Customers browse a catalog by brand and category
 
 ### 3.1 Accounts *(added)*
 - **C1** Sign up with name, email and password (minimum 10 characters). Duplicate email is rejected with a clear message.
+- **C1a** *(added)* The sign-up form checks that the email is a valid address (for example `name@example.com`) before sending anything, and shows the message next to the field.
+- **C1b** *(added)* Every password field (sign in and sign up) has a show/hide control.
 - **C2** Log in with email and password. Success returns a JWT (60 minutes). Wrong credentials give one generic error.
 - **C3** Log out clears the session and the local cart copy (see B9).
 - **C4** The UI shows who is signed in and exposes the admin link only to admins.
 - **C5** Disabled accounts are rejected on every request.
+- **C5a** *(added)* The sign-in page shows a "Reviewing this store?" box with the demo admin email and password, so a reviewer can open the admin area at once.
 
-### 3.2 Home / product listing
+### 3.2a Home page *(added)*
+- **C5b** `/` is a home page: a hero with the store name, a tagline and a **Shop now** button to `/shop`; a "Top bundles" section with the three products whose best offer saves the most per pack, each linking to its product page; a one-line footer saying it is a demo store.
+- **C5c** The header is the same on every page: Shop on the left, the store name in the centre, and Cart (with its count), Sign in or the user's name and Sign out, the admin link (admins only) and the language switch on the right. Below 1024 px wide the right-hand actions fold into a menu, so every action stays reachable on a phone.
+
+### 3.2 Shop (product listing at `/shop`)
 - **C6** Show every active product with its main image, name, brand, category and **all** its pricing options (units and bundle price).
-- **C7** Show lists of brands and categories. Selecting one filters the products. Brand and category filters combine.
+- **C7** Show lists of brands and categories. Selecting one filters the products. Brand and category filters combine. *(Built as two dropdowns, Category and Brand, drawn by the app in the site's style rather than the browser's system menu, keyboard accessible, listing names without product counts.)*
 - **C8** Show the active filter, a clear-filters control and a result count.
 - **C9** Open a product page from any card.
 - **C10** Quick add: pick an offer on the card and add one bundle to the cart.
@@ -56,7 +63,8 @@ A small medical e-commerce app. Customers browse a catalog by brand and category
 - **C18** Each line shows the product, the selected offer, bundles, **pack quantity** (for example "2 × 4-pack offer, 8 packs") and the line total.
 - **C19** Change a line's bundle count (validated) or remove it. Totals recalculate automatically.
 - **C20** Different offers of the same product are **separate lines**. Adding the same product and tier again increases the existing line.
-- **C21** Show the grand total, the line count and an empty-cart state with a link back to the store.
+- **C21** Show the grand total, one summary row per line with the number of bundles in the cart, and an empty-cart state with a link back to the store.
+- **C21a** *(added)* A **Clear cart** button empties the cart after a confirmation.
 - **C22** If a line's offer was deleted or changed by an admin, the cart shows it clearly (unavailable, or repriced) and excludes unavailable lines from the total.
 - **C23** Hybrid storage (B9): a guest cart lives in localStorage, and a signed-in cart lives on the server. The guest cart merges into the server cart silently on sign-in, with no notice.
 
@@ -119,7 +127,7 @@ A small medical e-commerce app. Customers browse a catalog by brand and category
   - **Product A:** exactly 1 tier (1 pack),
   - **Product B:** exactly 2 tiers (1 pack, 4 packs),
   - **Product C:** exactly 3 tiers (1 pack 5.500, 4 packs 19.500, 12 packs 55.000 KWD),
-  - 2 to 3 images each.
+  - one image each: an SVG placeholder written by the seed, replaced with real pictures in the admin area (originally 2 to 3 images each; see DESIGN.md section 14).
   - Seed data is fictional, with no real company or employer names.
 
 ## 6. Non-functional requirements
@@ -148,7 +156,7 @@ A small medical e-commerce app. Customers browse a catalog by brand and category
 
 ## 7. Deliverables
 
-1. Live storefront URL, with the admin area reachable and demo admin and customer credentials in the README.
+1. Live storefront URL, with the admin area reachable. The demo admin email and password are shown on the sign-in page; the demo customer password is sent with the submission. The README holds no credentials.
 2. GitHub repository (renamed to a neutral name), one monorepo.
 3. README: setup, project structure, environment variable table, deploy guide.
 4. List of AI tools and technologies used.
@@ -180,7 +188,7 @@ A small medical e-commerce app. Customers browse a catalog by brand and category
 | D19 | Digits stay Latin in the Arabic view |
 | D20 | Language choice is stored in the browser only, not on the account |
 | D21 | Search matches product, brand or category name, in both languages |
-| D22 | The `design-taste-frontend` skill is used in a **limited way**: only its visual direction (palette, type pairing, spacing, hover motion, home hero) for the storefront. Its gate check, photo tools, copy linter and "one section per screen" / "no image captions" rules are not used. Admin and cart stay plain and functional. Where the skill conflicts with these requirements (RTL, product cards, uploaded images), the requirements win. |
+| D22 | The `design-taste-frontend` skill was tried on a separate branch for the storefront look and **dropped**: the result was not kept. The interface was designed with the `frontend-design` skill instead: white and teal, IBM Plex Sans and Plex Sans Arabic for text, Fraunces for the store name. Where any design choice conflicts with these requirements (RTL, product cards, uploaded images), the requirements win. |
 
 ## 9. Open questions
 
