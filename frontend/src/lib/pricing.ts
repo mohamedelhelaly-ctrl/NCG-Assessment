@@ -1,6 +1,8 @@
 // Bundle arithmetic shared by the listing, the product page and (later) the cart.
 // All amounts are integer fils. The server stays the source of truth for the real totals.
 
+import type { StoreProduct, Tier } from './types'
+
 export const MAX_BUNDLES = 99
 
 export interface PricedTier {
@@ -51,4 +53,22 @@ export function parseBundles(text: string): number | null {
   if (!/^\d{1,3}$/.test(text.trim())) return null
   const value = Number(text)
   return value >= 1 && value <= MAX_BUNDLES ? value : null
+}
+
+interface TopBundle {
+  product: StoreProduct
+  tier: Tier
+  saving: number
+}
+
+/** The three products whose best bundle saves the most per pack against buying one pack. */
+export function topBundles(products: StoreProduct[], count = 3): TopBundle[] {
+  return products
+    .map((product) => {
+      const tier = product.tiers.find((x) => x.id === bestValueId(product.tiers))
+      return tier ? { product, tier, saving: savingsPercent(tier, product.tiers) } : null
+    })
+    .filter((x): x is TopBundle => x !== null && x.saving > 0)
+    .sort((a, b) => b.saving - a.saving || a.product.id - b.product.id)
+    .slice(0, count)
 }

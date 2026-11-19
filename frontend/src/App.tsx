@@ -4,6 +4,7 @@ import { GuestOnly, RequireAdmin } from './components/auth/guards'
 import Layout from './components/layout/Layout'
 import { LoadingState } from './components/ui/Feedback'
 import CartPage from './pages/CartPage'
+import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ProductPage from './pages/ProductPage'
@@ -21,7 +22,8 @@ export default function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={<StorePage />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/shop" element={<StorePage />} />
         <Route path="/products/:id" element={<ProductPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route element={<GuestOnly />}>

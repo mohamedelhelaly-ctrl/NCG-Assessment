@@ -81,9 +81,9 @@ test('the product edit page has a single banner (its heading block is not a seco
 
 // ----------------------------------------------------------- headings in order
 
-test('the home page headings go h1, then h2 (never skipping to h3)', async () => {
+test('the shop headings go h1, then h2 (never skipping to h3)', async () => {
   mockApi({ ...healthy, ...storeRoutes([storeProduct(), storeProduct({ id: 8, name: 'Other' })]) })
-  renderApp('/')
+  renderApp('/shop')
   await screen.findByRole('heading', { name: 'Other' })
   const levels = screen.getAllByRole('heading').map((h) => Number(h.tagName[1]))
   expect(levels[0]).toBe(1)
@@ -128,7 +128,7 @@ test('changing a search or filter does NOT take focus away from the search box',
   const scrollTo = vi.fn()
   vi.stubGlobal('scrollTo', scrollTo)
   mockApi({ ...healthy, ...storeRoutes([storeProduct()]) })
-  renderApp('/')
+  renderApp('/shop')
   const search = await screen.findByLabelText('Search products, brands or categories')
   await userEvent.type(search, 'gloves')
   await waitFor(() => expect(screen.getByRole('button', { name: /Remove filter: “gloves”/ })).toBeInTheDocument())

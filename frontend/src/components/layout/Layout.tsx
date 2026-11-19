@@ -3,18 +3,14 @@ import { useTranslation } from 'react-i18next'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../../lib/authContext'
 import { useCart } from '../../lib/cartContext'
+import { CartIcon, ShopIcon } from '../ui/Icons'
 import LanguageSwitcher from './LanguageSwitcher'
 
-/** The store mark: four packs in a block. */
-function Mark() {
-  return (
-    <span aria-hidden="true" className="inline-grid grid-cols-2 gap-[3px]">
-      {[0, 1, 2, 3].map((i) => (
-        <span key={i} className="size-[0.62rem] rounded-[2px] bg-primary" />
-      ))}
-    </span>
-  )
-}
+const YEAR = new Date().getFullYear()
+
+// Every header action: text and icon in ink, teal with an underline on hover.
+const action =
+  'inline-flex min-h-10 items-center gap-2 whitespace-nowrap rounded-md px-1.5 text-sm sm:px-2 font-medium text-ink transition-colors hover:text-primary'
 
 export default function Layout() {
   const { t } = useTranslation()
@@ -35,75 +31,81 @@ export default function Layout() {
   }, [location.pathname])
 
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-screen flex-col">
       <a
         href="#content"
         className="sr-only focus:not-sr-only focus:fixed focus:start-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-white"
       >
         {t('nav.skip')}
       </a>
-      <header className="border-b border-line bg-surface">
+      <header className="border-b-2 border-teal bg-surface">
         <nav
           aria-label={t('nav.main')}
-          className="mx-auto flex min-h-14 max-w-6xl flex-wrap items-center gap-x-3 gap-y-1 px-4 py-1.5 sm:gap-x-5"
+          className="mx-auto grid min-h-16 max-w-6xl grid-cols-[auto_1fr_auto] items-center gap-0.5 px-1.5 sm:grid-cols-[1fr_auto_1fr] sm:gap-2 sm:px-4"
         >
-          <Link to="/" className="flex items-center gap-2.5 text-lg font-semibold">
-            <Mark />
+          <div className="flex items-center">
+            <NavLink to="/shop" className={action}>
+              <ShopIcon className="size-5 text-teal" />
+              <span className="link-draw max-sm:sr-only">{t('nav.shop')}</span>
+            </NavLink>
+          </div>
+
+          <Link
+            to="/"
+            aria-label={t('nav.home')}
+            className="justify-self-center font-brand text-[1.2rem] font-bold leading-none tracking-[-0.01em] text-primary-strong transition-colors hover:text-teal sm:text-[1.9rem]"
+          >
             {t('app.name')}
           </Link>
-          <div className="ms-auto flex flex-wrap items-center justify-end gap-x-1 gap-y-1 text-sm sm:gap-x-3">
+
+          <div className="flex items-center justify-end sm:gap-x-1.5">
             {user?.role === 'admin' && (
-              <NavLink
-                to="/admin"
-                className={({ isActive }) =>
-                  `rounded-md px-2.5 py-1.5 font-medium ${isActive ? 'bg-primary-soft text-primary-strong' : 'hover:bg-primary-soft'}`
-                }
-              >
-                {t('nav.admin')}
+              <NavLink to="/admin" className={`${action} max-md:hidden`}>
+                <span className="link-draw">{t('nav.admin')}</span>
               </NavLink>
             )}
+            <Link to="/cart" className={action}>
+              <CartIcon className="size-5 text-teal" />
+              <span className="link-draw max-sm:sr-only">{t('nav.cart')}</span>
+              {cart.count > 0 && (
+                <span className="min-w-5 rounded-full bg-primary px-1.5 text-center text-xs font-semibold leading-5 text-white tabular-nums">
+                  {cart.count}
+                </span>
+              )}
+            </Link>
             {user ? (
               <>
-                <span className="hidden max-w-40 truncate text-muted sm:inline">{user.full_name}</span>
+                <span className="hidden max-w-36 truncate px-1 text-sm text-muted lg:inline">
+                  {user.full_name}
+                </span>
                 <button
                   type="button"
-                  className="whitespace-nowrap rounded-md px-2.5 py-1.5 hover:bg-primary-soft"
+                  className={action}
                   onClick={() => {
                     logout()
                     navigate('/login')
                   }}
                 >
-                  {t('nav.signOut')}
+                  <span className="link-draw">{t('nav.signOut')}</span>
                 </button>
               </>
             ) : (
-              <>
-                <Link to="/login" className="whitespace-nowrap rounded-md px-2.5 py-1.5 hover:bg-primary-soft">
-                  {t('nav.signIn')}
-                </Link>
-                <Link to="/register" className="btn btn-sm btn-primary hidden whitespace-nowrap sm:inline-flex">
-                  {t('nav.createAccount')}
-                </Link>
-              </>
-            )}
-            {cart.count > 0 && (
-              <Link
-                to="/cart"
-                className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-primary-soft px-2.5 py-1.5 font-medium text-primary-strong hover:bg-primary-soft/70"
-              >
-                {t('nav.cart')}
-                <span className="rounded bg-primary px-1.5 text-xs leading-5 text-white tabular-nums">
-                  {cart.count}
-                </span>
+              <Link to="/login" className={action}>
+                <span className="link-draw">{t('nav.signIn')}</span>
               </Link>
             )}
             <LanguageSwitcher />
           </div>
         </nav>
       </header>
-      <main id="content" ref={content} tabIndex={-1} className="outline-none">
+      <main id="content" ref={content} tabIndex={-1} className="flex-1 outline-none">
         <Outlet />
       </main>
+      <footer className="border-t border-line">
+        <p className="mx-auto max-w-6xl px-4 py-6 text-center text-sm text-muted">
+          {t('footer.line', { year: YEAR })}
+        </p>
+      </footer>
     </div>
   )
 }

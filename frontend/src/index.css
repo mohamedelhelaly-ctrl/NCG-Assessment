@@ -1,21 +1,25 @@
 @import 'tailwindcss';
 
-/* Design tokens. Pharmacy green is the one strong colour; everything else is quiet. */
+/* Design tokens. White and teal: #069494 is the brand teal for accents, rules, icons and large
+   type; the deeper #057a7a carries filled buttons and small teal text, so white on it passes AA. */
 @theme {
-  --color-paper: #f4f7f5;
+  --color-paper: #ffffff;
   --color-surface: #ffffff;
-  --color-ink: #1c2a25;
-  --color-muted: #55645e;
-  --color-line: #d5ded9;
-  --color-primary: #15634f;
-  --color-primary-strong: #0e4a3b;
-  --color-primary-soft: #e1f0ea;
+  --color-ink: #17302f;
+  --color-muted: #536664;
+  --color-line: #d5e3e3;
+  --color-teal: #069494;
+  --color-primary: #057a7a;
+  --color-primary-strong: #045f5f;
+  --color-primary-soft: #e6f4f4;
   --color-amber: #8a5700;
   --color-amber-soft: #fbefd5;
   --color-danger: #b3261e;
   --color-danger-soft: #fce8e6;
   /* One designed family for both scripts, so mixed Arabic and English lines sit evenly. */
   --font-sans: 'IBM Plex Sans', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  /* the wordmark only */
+  --font-brand: 'Fraunces', Georgia, serif;
 }
 
 @layer base {
@@ -45,7 +49,22 @@
 @layer components {
   /* ---- buttons: one primary per area, everything else quiet ---- */
   .btn {
-    @apply inline-flex h-10 items-center justify-center gap-2 rounded-md border border-line bg-surface px-3.5 text-sm font-medium text-ink transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-10 items-center justify-center gap-2 rounded-md border border-line bg-surface px-3.5 text-sm font-medium text-ink transition-colors hover:border-primary hover:text-primary hover:underline disabled:cursor-not-allowed disabled:opacity-50 disabled:no-underline;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 1px;
+  }
+  /* links in the header and on cards: the underline draws in from the reading start */
+  .link-draw {
+    background: linear-gradient(currentColor, currentColor) no-repeat 0 100% / 0 1px;
+    transition: background-size 0.2s ease, color 0.15s ease;
+  }
+  [dir='rtl'] .link-draw {
+    background-position: 100% 100%;
+  }
+  .link-draw:hover,
+  .link-draw:focus-visible,
+  a:hover .link-draw {
+    background-size: 100% 1px;
   }
   .btn-primary {
     @apply border-primary bg-primary text-white hover:border-primary-strong hover:bg-primary-strong hover:text-white;

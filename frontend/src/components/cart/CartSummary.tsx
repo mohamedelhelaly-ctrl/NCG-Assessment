@@ -65,7 +65,7 @@ export default function CartSummary({ quote, busy }: { quote: Quote; busy: boole
 
       <div className="space-y-3 border-t border-line pt-4">
         <p className="text-sm text-muted">{t('cart.noCheckout')}</p>
-        <Link to="/" className="btn w-full">
+        <Link to="/shop" className="btn w-full">
           {t('cart.continue')}
         </Link>
       </div>

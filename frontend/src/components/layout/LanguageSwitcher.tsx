@@ -10,7 +10,7 @@ export default function LanguageSwitcher() {
     <button
       type="button"
       lang={target}
-      className="btn btn-sm btn-quiet font-semibold"
+      className="btn btn-sm btn-quiet font-semibold max-sm:px-1.5"
       onClick={() => void setLanguage(target)}
     >
       {t('nav.switchLanguage')}

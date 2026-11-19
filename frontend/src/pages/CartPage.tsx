@@ -47,7 +47,7 @@ export default function CartPage() {
             <span className="block text-lg font-medium text-ink">{t('cart.empty')}</span>
             <span className="mt-1 block">{t('cart.emptyHint')}</span>
           </EmptyState>
-          <Link to="/" className="btn btn-primary">
+          <Link to="/shop" className="btn btn-primary">
             {t('cart.browse')}
           </Link>
         </div>

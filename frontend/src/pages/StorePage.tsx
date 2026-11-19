@@ -19,7 +19,7 @@ const PAGE_SIZE = 12
 /** Home: search, filters and the product grid. Everything the shopper chose lives in the address. */
 export default function StorePage() {
   const { t } = useTranslation()
-  usePageTitle('title.home')
+  usePageTitle('title.shop')
   const [params, setParams] = useSearchParams()
   const q = params.get('q') ?? ''
   const brand = params.get('brand') ?? ''

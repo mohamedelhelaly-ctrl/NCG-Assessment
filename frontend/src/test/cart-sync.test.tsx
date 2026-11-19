@@ -438,7 +438,7 @@ test('after signing out, the same browser starts with an empty cart for the next
   await screen.findByText('2 × 4 packs')
   await userEvent.click(screen.getByRole('button', { name: 'Sign out' }))
   await screen.findByRole('heading', { name: 'Sign in' })
-  await userEvent.click(screen.getByRole('link', { name: 'Create account' }))
+  await userEvent.click(screen.getByRole('link', { name: 'Create one' }))
   expect(localLines()).toEqual([])
 })
 

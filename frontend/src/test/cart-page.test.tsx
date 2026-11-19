@@ -199,7 +199,7 @@ test('an empty cart invites you to the shop and asks the server for nothing', as
   const calls = await openCart([])
   expect(await screen.findByText('Your cart is empty')).toBeInTheDocument()
   expect(screen.getByText('Add a bundle from the shop and it will show up here.')).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: 'Browse products' })).toHaveAttribute('href', '/')
+  expect(screen.getByRole('link', { name: 'Browse products' })).toHaveAttribute('href', '/shop')
   expect(callsTo(calls, QUOTE)).toHaveLength(0)
 })
 
@@ -226,7 +226,7 @@ test('there is no checkout button, and the summary says why', async () => {
   await screen.findByText('2 × 4 packs')
   expect(screen.queryByRole('button', { name: /checkout|pay|order/i })).not.toBeInTheDocument()
   expect(screen.getByText("Checkout isn't part of this demo.")).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: 'Continue shopping' })).toHaveAttribute('href', '/')
+  expect(screen.getByRole('link', { name: 'Continue shopping' })).toHaveAttribute('href', '/shop')
 })
 
 test('a guest is told the cart is kept in this browser and invited to sign in', async () => {

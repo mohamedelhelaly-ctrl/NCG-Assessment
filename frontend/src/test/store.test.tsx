@@ -36,7 +36,7 @@ const scales = storeProduct({
 const card = (name: string) =>
   screen.getByRole('heading', { name, level: 2 }).closest('article') as HTMLElement
 
-async function openStore(products = [gloves, syringes, scales], path = '/') {
+async function openStore(products = [gloves, syringes, scales], path = '/shop') {
   const calls = mockApi({ ...healthy, ...storeRoutes(products) })
   renderApp(path)
   await screen.findByRole('heading', { name: 'Nitrile Examination Gloves', level: 2 }).catch(() => null)
@@ -45,14 +45,14 @@ async function openStore(products = [gloves, syringes, scales], path = '/') {
 
 // ----------------------------------------------------------------- the listing
 
-test('the home page shows the headline, a search box and the products', async () => {
+test('the shop shows the headline, a search box and the products', async () => {
   await openStore()
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
     'Medical supplies, by the pack and by the bundle.',
   )
   expect(screen.getByRole('search')).toBeInTheDocument()
   expect(screen.getByText('Products: 3')).toBeInTheDocument()
-  await waitFor(() => expect(document.title).toBe('Medical supplies · MedicStore'))
+  await waitFor(() => expect(document.title).toBe('Shop · MedicStore'))
 })
 
 test('each card shows the picture, brand, name and category', async () => {
@@ -148,7 +148,7 @@ test('brand and category filters combine', async () => {
 })
 
 test('a filter can be removed from its chip, and all filters can be cleared', async () => {
-  const calls = await openStore([gloves], '/?category=2&brand=2')
+  const calls = await openStore([gloves], '/shop?category=2&brand=2')
   await screen.findByRole('button', { name: 'Remove filter: Medical Devices' })
   await userEvent.click(screen.getByRole('button', { name: 'Remove filter: Medical Devices' }))
   await waitFor(() => expect(callsTo(calls, LIST).at(-1)!.url.searchParams.get('category_id')).toBeNull())
@@ -158,7 +158,7 @@ test('a filter can be removed from its chip, and all filters can be cleared', as
 })
 
 test('filters in the address are applied on arrival', async () => {
-  const calls = await openStore([gloves], '/?q=glove&category=1&brand=1&page=2')
+  const calls = await openStore([gloves], '/shop?q=glove&category=1&brand=1&page=2')
   const params = callsTo(calls, LIST)[0].url.searchParams
   expect(Object.fromEntries(params)).toEqual({
     page: '2',
@@ -171,13 +171,13 @@ test('filters in the address are applied on arrival', async () => {
 })
 
 test('changing a filter goes back to the first page', async () => {
-  const calls = await openStore([gloves], '/?page=3')
+  const calls = await openStore([gloves], '/shop?page=3')
   await userEvent.click(await screen.findByRole('button', { name: /Medical Devices/ }))
   await waitFor(() => expect(callsTo(calls, LIST).at(-1)!.url.searchParams.get('page')).toBe('1'))
 })
 
 test('on a phone the filters open from a button that reports its state', async () => {
-  await openStore([gloves], '/?brand=1')
+  await openStore([gloves], '/shop?brand=1')
   const toggle = screen.getByRole('button', { name: /^Filters/ })
   expect(toggle).toHaveAttribute('aria-expanded', 'false')
   expect(toggle).toHaveTextContent('1') // one filter is active
@@ -203,7 +203,7 @@ test('pressing Search or Enter searches straight away', async () => {
 })
 
 test('clearing the search chip empties the box and searches everything again', async () => {
-  const calls = await openStore([gloves], '/?q=glove')
+  const calls = await openStore([gloves], '/shop?q=glove')
   await userEvent.click(await screen.findByRole('button', { name: 'Remove filter: “glove”' }))
   expect(screen.getByLabelText('Search products, brands or categories')).toHaveValue('')
   await waitFor(() => expect(callsTo(calls, LIST).at(-1)!.url.searchParams.get('search')).toBeNull())
@@ -213,7 +213,7 @@ test('clearing the search chip empties the box and searches everything again', a
 
 test('shows a loading state while the products load', async () => {
   mockApi({ ...healthy, ...storeRoutes([], { [LIST]: () => new Promise(() => {}) }) })
-  renderApp('/')
+  renderApp('/shop')
   expect(await screen.findByRole('status', { name: 'Loading products…' })).toBeInTheDocument()
 })
 
@@ -225,7 +225,7 @@ test('a failed load says so and can be retried', async () => {
       [LIST]: () => (fail ? apiError(500, 'http_error', 'Server error') : { body: page([gloves]) }),
     }),
   })
-  renderApp('/')
+  renderApp('/shop')
   expect(await screen.findByRole('alert')).toHaveTextContent('Server error')
   fail = false
   await userEvent.click(screen.getByRole('button', { name: 'Try again' }))
@@ -234,13 +234,13 @@ test('a failed load says so and can be retried', async () => {
 
 test('an empty shop says that nothing is on sale yet', async () => {
   mockApi({ ...healthy, ...storeRoutes([]) })
-  renderApp('/')
+  renderApp('/shop')
   expect(await screen.findByText('No products are on sale yet. Please check back soon.')).toBeInTheDocument()
 })
 
 test('no matches explains what to change and offers to clear the filters', async () => {
   const calls = mockApi({ ...healthy, ...storeRoutes([]) })
-  renderApp('/?q=zzz')
+  renderApp('/shop?q=zzz')
   expect(
     await screen.findByText('No products match your search or filters. Try another word, or clear the filters.'),
   ).toBeInTheDocument()
@@ -253,7 +253,7 @@ test('pagination moves between pages', async () => {
     ...healthy,
     ...storeRoutes([gloves], { [LIST]: json(page([gloves], { total: 30, total_pages: 3, page_size: 12 })) }),
   })
-  renderApp('/')
+  renderApp('/shop')
   expect(await screen.findByText('Page 1 of 3')).toBeInTheDocument()
   await userEvent.click(screen.getByRole('button', { name: 'Next' }))
   await waitFor(() => expect(callsTo(calls, LIST).at(-1)!.url.searchParams.get('page')).toBe('2'))
@@ -266,7 +266,8 @@ const stored = () => JSON.parse(localStorage.getItem('cart:v1') ?? '{"lines":[]}
 
 test('quick add puts one bundle of the chosen offer in the cart and shows the count', async () => {
   await openStore()
-  expect(screen.queryByText('Cart')).not.toBeInTheDocument()
+  // the cart link is always there; it has no count while the cart is empty
+  expect(screen.getByRole('link', { name: 'Cart' })).toBeInTheDocument()
   const c = within(card('Nitrile Examination Gloves'))
   await userEvent.click(c.getAllByRole('radio')[1]) // 4 packs
   await userEvent.click(c.getByRole('button', { name: 'Add to cart' }))

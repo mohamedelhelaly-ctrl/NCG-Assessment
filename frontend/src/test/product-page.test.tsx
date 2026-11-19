@@ -21,8 +21,8 @@ const total = () => screen.getByText('Total').nextElementSibling as HTMLElement
 test('shows the name, brand, category, description and every offer', async () => {
   await openProduct()
   expect(screen.getByText('Powder-free nitrile gloves for examinations.')).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: 'Nuvexa Medical' })).toHaveAttribute('href', '/?brand=1')
-  expect(screen.getByRole('link', { name: 'Medical Consumables' })).toHaveAttribute('href', '/?category=1')
+  expect(screen.getByRole('link', { name: 'Nuvexa Medical' })).toHaveAttribute('href', '/shop?brand=1')
+  expect(screen.getByRole('link', { name: 'Medical Consumables' })).toHaveAttribute('href', '/shop?category=1')
   expect(radios()).toHaveLength(3)
   expect(radios()[2].closest('label')).toHaveTextContent(/12 packs/)
   expect(radios()[2].closest('label')).toHaveTextContent('Best value')
@@ -46,7 +46,7 @@ test('works for a product with two offers', async () => {
 
 test('has a way back to all products', async () => {
   await openProduct()
-  expect(screen.getByRole('link', { name: 'All products' })).toHaveAttribute('href', '/')
+  expect(screen.getByRole('link', { name: 'All products' })).toHaveAttribute('href', '/shop')
 })
 
 // ------------------------------------------------------------------ the gallery

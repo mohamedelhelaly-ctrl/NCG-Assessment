@@ -56,7 +56,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation()
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
-      <Link to="/" className="mb-6 inline-block text-sm text-muted hover:text-primary">
+      <Link to="/shop" className="mb-6 inline-block text-sm text-muted hover:text-primary">
         {t('product.back')}
       </Link>
       {children}
@@ -106,10 +106,10 @@ function ProductView({ product }: { product: StoreProductDetail }) {
       <div className="min-w-0 space-y-6">
         <div className="space-y-2">
           <p className="flex flex-wrap gap-x-4 text-sm text-muted">
-            <Link to={`/?brand=${product.brand.id}`} className="hover:text-primary hover:underline">
+            <Link to={`/shop?brand=${product.brand.id}`} className="hover:text-primary hover:underline">
               <bdi>{product.brand.name}</bdi>
             </Link>
-            <Link to={`/?category=${product.category.id}`} className="hover:text-primary hover:underline">
+            <Link to={`/shop?category=${product.category.id}`} className="hover:text-primary hover:underline">
               <bdi>{product.category.name}</bdi>
             </Link>
           </p>
