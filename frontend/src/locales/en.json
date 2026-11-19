@@ -47,6 +47,8 @@
   "auth": {
     "signInTitle": "Sign in",
     "email": "Email",
+    "reviewerTitle": "Reviewing this store?",
+    "reviewerBody": "Sign in with this admin account to open Manage Store.",
     "showPassword": "Show password",
     "hidePassword": "Hide password",
     "password": "Password",

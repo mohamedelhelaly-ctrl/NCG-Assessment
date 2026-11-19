@@ -8,6 +8,10 @@ import { usePageTitle } from '../hooks/usePageTitle'
 import { useAuth } from '../lib/authContext'
 import { errorText } from '../lib/errors'
 
+// Demo access for reviewers, shown on the sign-in page on purpose.
+const REVIEWER_EMAIL = 'admin@example.com'
+const REVIEWER_PASSWORD = 'ncg-admin-password'
+
 export default function LoginPage() {
   const { t } = useTranslation()
   usePageTitle('title.login')
@@ -61,6 +65,16 @@ export default function LoginPage() {
           {submitting ? t('auth.signingIn') : t('auth.signInButton')}
         </button>
       </form>
+      <aside className="mt-6 rounded-lg border border-teal/30 bg-teal/5 px-4 py-3 text-sm">
+        <p className="font-medium text-primary-strong">{t('auth.reviewerTitle')}</p>
+        <p className="mt-0.5 text-muted">{t('auth.reviewerBody')}</p>
+        <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1" dir="ltr">
+          <dt className="text-muted">{t('auth.email')}</dt>
+          <dd className="select-all font-medium">{REVIEWER_EMAIL}</dd>
+          <dt className="text-muted">{t('auth.password')}</dt>
+          <dd className="select-all font-medium">{REVIEWER_PASSWORD}</dd>
+        </dl>
+      </aside>
       <p className="mt-6 text-sm text-muted">
         {t('auth.noAccount')}{' '}
         <Link to="/register" className="font-medium text-primary underline-offset-4 hover:underline">
