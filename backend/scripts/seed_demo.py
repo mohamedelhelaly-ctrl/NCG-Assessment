@@ -1,6 +1,9 @@
 """Fictional demo catalog: 4 brands, 3 categories, 12 products with 1 to 3 pricing tiers each, and
-one simple SVG placeholder per product (the product name on a plain background). The manager
-replaces the placeholders with real pictures from the admin area. Also seeds a demo customer.
+one picture per product. The pictures are WebP files kept next to this script in `seed_images/`,
+named after the product (`nitrile-examination-gloves.webp`); a product without a file there gets a
+simple SVG placeholder instead (the product name on a plain background). Pictures are saved through
+the normal storage backend, so they land on local disk in development and in R2 on a server. The
+manager can replace them from the admin area. Also seeds a demo customer.
 
 Idempotent: it does nothing when the demo catalog is already there.
 
@@ -15,8 +18,10 @@ wipe a catalog that has already been seeded and edited. Remove the variable afte
 """
 
 import asyncio
+import re
 import sys
 import textwrap
+from pathlib import Path
 from xml.sax.saxutils import escape
 
 from sqlalchemy import delete, select
@@ -35,6 +40,8 @@ from app.services.storage import StorageBackend, get_storage
 MARKER_BRAND = "Nuvexa Medical"
 DEMO_EMAIL = "demo.customer@example.com"
 SVG_TYPE = "image/svg+xml"
+WEBP_TYPE = "image/webp"
+SEED_IMAGES = Path(__file__).parent / "seed_images"
 
 BRANDS = ["Nuvexa Medical", "Orvanta Health", "Velmora Care", "Medquora"]
 CONSUMABLES = "Medical Consumables"
@@ -138,6 +145,21 @@ def tier_label(packs: int) -> str:
     return f"{packs} pack" if packs == 1 else f"{packs} packs"
 
 
+def image_slug(name: str) -> str:
+    """'Disposable Syringes (5ml)' -> 'disposable-syringes-5ml', the picture's file name."""
+    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+
+
+def seed_picture(name: str, background: str) -> tuple[str, bytes, str]:
+    """The product's picture from seed_images/ if there is one, else an SVG placeholder.
+    Returns (file name, bytes, content type)."""
+    slug = image_slug(name)
+    photo = SEED_IMAGES / f"{slug}.webp"
+    if photo.is_file():
+        return f"{slug}.webp", photo.read_bytes(), WEBP_TYPE
+    return "placeholder.svg", placeholder_svg(name, background).encode(), SVG_TYPE
+
+
 def placeholder_svg(title: str, background: str) -> str:
     """A 1200x900 picture: the title, centred, on a plain background. The title is XML-escaped."""
     lines = textwrap.wrap(title, width=16) or [title]
@@ -210,9 +232,9 @@ async def seed_catalog(storage: StorageBackend, reset: bool = False) -> str:
                             price_fils=price,
                         )
                     )
-                key = f"products/{product.id}/placeholder.svg"
-                svg = placeholder_svg(name, TONES[category]).encode()
-                await storage.save(key, svg, SVG_TYPE)
+                filename, data, content_type = seed_picture(name, TONES[category])
+                key = f"products/{product.id}/{filename}"
+                await storage.save(key, data, content_type)
                 stored_keys.append(key)
                 db.add(ProductImage(product_id=product.id, storage_key=key, alt=name, position=0))
             await db.commit()

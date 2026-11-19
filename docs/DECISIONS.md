@@ -113,7 +113,7 @@ Brands: **Nuvexa Medical, Orvanta Health, Velmora Care, Medquora.** Categories: 
 - Drugs were rejected: they imply prescriptions and regulation. Mobility aids (e.g. wheelchairs) were rejected as bundle products because nobody buys a 12-pack of wheelchairs.
 
 **Follow-through:**
-- Seed images are generated placeholders (plain SVG pictures, one tone per category), never copied from a real store. The admin replaces them with real uploads.
+- **[REVISED]** Seed images: each demo product has one product photo committed in `backend/scripts/seed_images/`, so a fresh clone or a reset shows real pictures. They were first plain SVG placeholders; the SVG is kept as the fallback for a product without a photo. The photos are not copied from a real store. The admin can replace them with other uploads.
 
 ---
 
@@ -230,7 +230,7 @@ A **tier** (also called pricing option, offer or bundle) is one row in `pricing_
 - A product can have **up to 10 images**. The admin can upload, reorder, edit the alt text (English and optional Arabic) and delete. The first image is the main one; the product page shows arrows and thumbnails when there is more than one.
 - The API validates the upload (5 MB cap, a pixel cap, a real image), then re-encodes it to **WebP** with the longest side at most 1600 px.
 - The object key is stored on the image row; the API returns the public URL (`R2_PUBLIC_URL` in production, `PUBLIC_API_URL` locally).
-- The seed script writes its SVG placeholder pictures through the same storage backend, so a fresh deploy has pictures.
+- The seed script saves each product's photo from `scripts/seed_images/` (or an SVG placeholder when there is none) through the same storage backend, so a fresh deploy has pictures.
 - Credentials come from environment variables, never committed.
 
 ---

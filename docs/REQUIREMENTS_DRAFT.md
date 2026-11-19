@@ -1,6 +1,6 @@
 # Requirements Draft: Medical E-Commerce with Multi-Tier Pricing
 
-Status: IMPLEMENTED (milestones M0 to M6). Known gaps: C22's "repriced" notice (listed under known limitations in the README), the repository rename (D7, not done yet) and the seed images (B13: one SVG placeholder per product instead of 2 to 3 images). Everything else below is built and tested. IDs: **C** = customer, **A** = admin, **B** = business rule, **N** = non-functional, **D** = decision, **Q** = open question.
+Status: IMPLEMENTED (milestones M0 to M6). Known gaps: C22's "repriced" notice (listed under known limitations in the README), the repository rename (D7, not done yet) and the seed images (B13: one photo per product instead of 2 to 3 images). Everything else below is built and tested. IDs: **C** = customer, **A** = admin, **B** = business rule, **N** = non-functional, **D** = decision, **Q** = open question.
 
 Source: the assessment brief plus the decisions agreed in review (see section 8). Items marked *(added)* go beyond the brief on purpose.
 
@@ -127,7 +127,7 @@ A small medical e-commerce app. Customers browse a catalog by brand and category
   - **Product A:** exactly 1 tier (1 pack),
   - **Product B:** exactly 2 tiers (1 pack, 4 packs),
   - **Product C:** exactly 3 tiers (1 pack 5.500, 4 packs 19.500, 12 packs 55.000 KWD),
-  - one image each: an SVG placeholder written by the seed, replaced with real pictures in the admin area (originally 2 to 3 images each; see DESIGN.md section 14).
+  - one image each: a product photo committed with the seed (`backend/scripts/seed_images/`), more can be added in the admin area (originally 2 to 3 images each; see DESIGN.md section 14).
   - Seed data is fictional, with no real company or employer names.
 
 ## 6. Non-functional requirements

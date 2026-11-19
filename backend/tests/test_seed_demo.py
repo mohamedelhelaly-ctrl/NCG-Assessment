@@ -1,5 +1,6 @@
 from sqlalchemy import func, select
 
+import scripts.seed_demo as seed_demo
 from app.config import get_settings
 from app.database import SessionLocal
 from app.models.brand import Brand
@@ -8,6 +9,8 @@ from app.models.product import Product
 from scripts.seed_demo import (
     DEMO_EMAIL,
     PRODUCTS,
+    SEED_IMAGES,
+    image_slug,
     placeholder_svg,
     seed_catalog,
     seed_customer,
@@ -77,19 +80,42 @@ async def test_seed_has_four_brands_and_three_categories_with_the_right_links(cl
         assert (await db.execute(select(func.count(Category.id)))).scalar_one() == 3
 
 
-async def test_every_product_is_active_has_a_description_and_one_svg_placeholder(client, storage):
+async def test_every_product_is_active_has_a_description_and_one_real_picture(client, storage):
     await seed_catalog(storage)
     items = await listing(client)
     assert len(items) == 12
     for name, item in items.items():
         assert item["description"].strip(), name
-        assert item["main_image"]["url"].endswith("/placeholder.svg"), name
+        assert item["main_image"]["url"].endswith(f"/{image_slug(name)}.webp"), name
         assert item["main_image"]["alt"] == name
-    assert len(storage.files) == 12 and all(k.endswith(".svg") for k in storage.files)
+    assert len(storage.files) == 12 and all(k.endswith(".webp") for k in storage.files)
 
 
-async def test_a_placeholder_is_a_plain_svg_with_the_product_name(storage):
+def test_every_demo_product_has_its_picture_in_the_repository():
+    """A fresh clone gets the real pictures, so none may be missing or misnamed."""
+    expected = {f"{image_slug(name)}.webp" for name, *_ in PRODUCTS}
+    assert {f.name for f in SEED_IMAGES.glob("*.webp")} == expected
+
+
+async def test_seed_pictures_are_real_webp_files_stored_unchanged(storage):
     await seed_catalog(storage)
+    for key, data in storage.files.items():
+        assert data[:4] == b"RIFF" and data[8:12] == b"WEBP", key
+        assert data == (SEED_IMAGES / key.rsplit("/", 1)[-1]).read_bytes(), key
+
+
+def test_image_slug_matches_the_file_names():
+    assert image_slug("Disposable Syringes (5ml)") == "disposable-syringes-5ml"
+    assert image_slug("Nitrile Examination Gloves") == "nitrile-examination-gloves"
+
+
+async def test_a_product_without_a_picture_falls_back_to_a_plain_svg(
+    client, storage, monkeypatch, tmp_path
+):
+    monkeypatch.setattr(seed_demo, "SEED_IMAGES", tmp_path)  # no pictures at all
+    await seed_catalog(storage)
+    items = await listing(client)
+    assert all(i["main_image"]["url"].endswith("/placeholder.svg") for i in items.values())
     svgs = [b.decode() for b in storage.files.values()]
     assert all(s.startswith("<svg") and s.endswith("</svg>") for s in svgs)
     assert not any("<script" in s or "<image" in s for s in svgs)
@@ -129,7 +155,8 @@ async def test_reset_replaces_the_old_catalog_and_its_stored_images(client, stor
     assert result.startswith("created") and "2 stored images removed" in result
     items = await listing(client)
     assert set(items) == set(EXPECTED)  # the old product is gone
-    assert not any(k.endswith(".webp") for k in storage.files)  # the old files are gone
+    assert not any(k.rsplit("/", 1)[-1].startswith("img") for k in storage.files)  # old files gone
+    assert len(storage.files) == 12  # only the new seed pictures remain
     async with SessionLocal() as db:
         names = set((await db.execute(select(Brand.name))).scalars())
         assert "Nova Health" not in names and len(names) == 4
@@ -153,10 +180,10 @@ async def test_reset_never_wipes_a_catalog_that_is_already_seeded(client, storag
     assert "Real Product" in await listing(client)
 
 
-async def test_a_seeded_catalog_can_be_edited_and_its_placeholder_replaced(
+async def test_a_seeded_catalog_can_be_edited_and_its_picture_replaced(
     client, storage, admin_headers
 ):
-    """The manager's path: open a product and remove the placeholder (the real pictures are
+    """The manager's path: open a product and remove the seeded picture (a new one is
     uploaded through the normal image upload)."""
     await seed_catalog(storage)
     admin = (await client.get("/api/v1/admin/products", headers=admin_headers)).json()
@@ -168,8 +195,8 @@ async def test_a_seeded_catalog_can_be_edited_and_its_placeholder_replaced(
     assert (
         await client.delete(f"/api/v1/admin/images/{image['id']}", headers=admin_headers)
     ).status_code == 204
-    assert image["url"].rsplit("/", 1)[-1] == "placeholder.svg"
-    assert f"products/{product['id']}/placeholder.svg" not in storage.files  # file removed too
+    assert image["url"].rsplit("/", 1)[-1] == "sterile-gauze-pads.webp"
+    assert f"products/{product['id']}/sterile-gauze-pads.webp" not in storage.files  # file removed
     after = (
         await client.get(f"/api/v1/admin/products/{product['id']}", headers=admin_headers)
     ).json()

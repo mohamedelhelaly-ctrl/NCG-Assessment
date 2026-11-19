@@ -137,7 +137,7 @@ rm -rf backend/.venv backend/uploads frontend/node_modules
 
 ### Demo data
 
-With `SEED_DEMO=true` the API seeds a fictional catalog at startup (idempotent): 4 brands (Nuvexa Medical, Orvanta Health, Velmora Care, Medquora), 3 categories (Medical Consumables, Medical Devices, First Aid & Wound Care) and 12 products with 1, 2 or 3 pricing tiers. Each product gets a simple SVG placeholder picture (its name on a plain background); the manager replaces these with real pictures in the admin area. Set `DEMO_PASSWORD` to also create the demo customer `demo.customer@example.com`.
+With `SEED_DEMO=true` the API seeds a fictional catalog at startup (idempotent): 4 brands (Nuvexa Medical, Orvanta Health, Velmora Care, Medquora), 3 categories (Medical Consumables, Medical Devices, First Aid & Wound Care) and 12 products with 1, 2 or 3 pricing tiers. Each product gets its photo from `backend/scripts/seed_images/` (a WebP file named after the product, for example `nitrile-examination-gloves.webp`), saved through the normal storage backend, so a fresh clone shows the real pictures. A product with no file there falls back to a simple SVG placeholder. The manager can replace any picture in the admin area. Set `DEMO_PASSWORD` to also create the demo customer `demo.customer@example.com`.
 
 `--reset` (or `SEED_DEMO_RESET=true` on a server) first removes **all** products, brands and categories and their stored images, then seeds the demo data. It only acts while the demo catalog is missing, so leaving the variable on cannot wipe a catalog that was already seeded and edited.
 
@@ -198,7 +198,7 @@ Every error uses one shape: `{"error": {"code", "message", "fields", "params"}}`
 - **Accounts:** a single admin, created from environment variables; no user-management screen, password reset or change screen, email verification or refresh tokens (a session lasts 60 minutes). The seed never changes an existing admin, so changing `FIRST_ADMIN_PASSWORD` later has no effect on an account that already exists.
 - **Public demo credentials:** the admin email and password are shown on the sign-in page and are in the source, so anyone can open Manage Store and edit the demo catalog. Keep nothing real behind that account and change the password after review.
 - **Rate limiting** (sign-in and sign-up) is kept in memory per process, which is right for one server instance only.
-- **Pictures:** the demo products show generated SVG placeholders until real pictures are uploaded. Uploads accept JPEG, PNG and WebP only (not SVG), up to 5 MB and 10 per product.
+- **Pictures:** each demo product is seeded with one photo; more can be uploaded in the admin area. Uploads accept JPEG, PNG and WebP only (not SVG), up to 5 MB and 10 per product.
 - **Arabic content:** the demo data has no Arabic text, so the English text is shown in the Arabic view until the manager adds translations.
 - **Search** is a substring match without a full-text or trigram index, which is fine for a small catalog.
 - **Carts on several devices** follow "last save wins"; there is no conflict resolution beyond reloading the server's cart after a failed save.

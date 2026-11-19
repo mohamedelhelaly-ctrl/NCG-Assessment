@@ -1,10 +1,10 @@
 # Tests
 
-**229 backend tests** (pytest, real PostgreSQL) and **303 frontend tests** (Vitest and Testing Library). Both suites also run in CI, together with ruff, oxlint, the migration round trip (`upgrade`, `downgrade`, `upgrade`, then `alembic check`) and the production build.
+**232 backend tests** (pytest, real PostgreSQL) and **303 frontend tests** (Vitest and Testing Library). Both suites also run in CI, together with ruff, oxlint, the migration round trip (`upgrade`, `downgrade`, `upgrade`, then `alembic check`) and the production build.
 
 Run them with `pytest` in `backend/` and `npm test` in `frontend/`. Tests never reach a real network: the frontend setup blocks `fetch`, and the backend uses a separate `shop_test` database and an in-memory image store.
 
-## Backend (229)
+## Backend (232)
 
 | File | Tests | What it proves |
 |---|---|---|
@@ -20,7 +20,7 @@ Run them with `pytest` in `backend/` and `npm test` in `frontend/`. Tests never 
 | `test_cart.py` | 51 | Per-user carts, saving rules, merge adds the same offer (cap 99) and keeps new lines, all-or-nothing, concurrent saves, database constraints, stale lines survive, **idempotent merge** (a replay never double-counts) |
 | `test_i18n.py` | 10 | Language header parsing and the per-field fallback |
 | `test_storage_and_config.py` | 6 | Local and R2 storage, path safety, production refuses to start without R2 or a strong secret |
-| `test_seed_demo.py` | 14 | The 12 demo products with exact tiers and prices, safe SVG placeholders, idempotent seed, guarded reset |
+| `test_seed_demo.py` | 17 | The 12 demo products with exact tiers and prices, every product has its photo in the repository and gets it unchanged as a WebP, safe SVG fallback when a photo is missing, idempotent seed, guarded reset |
 | `test_health.py` | 4 | Health check with a database ping; security headers on every response |
 
 ## Frontend (303)

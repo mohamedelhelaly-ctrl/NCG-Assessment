@@ -241,7 +241,7 @@ page load with token       GET /auth/me, then GET /me/cart; no PUT before it com
 - Upload pipeline (`services/images.py`): enforce 5 MB, check magic bytes (JPEG, PNG, WebP), open and verify with Pillow, strip EXIF, scale the longest side down to 1600 px, **re-encode as WebP**, save under `products/{product_id}/{uuid}.webp`. At most 10 images per product. `alt` is required.
 - Deleting an image or product removes the rows in the transaction and the stored objects **after commit**, best effort.
 - In production the app refuses to start without R2 configuration.
-- **Seed images** are plain SVG placeholders written by `seed_demo` (the product name on a coloured background), saved through the same storage interface and replaced by real pictures in the admin area. Uploads by the manager still accept only JPEG, PNG and WebP, so SVG cannot be uploaded through the API; the seed writes its own trusted SVG directly.
+- **Seed images** are product photos committed as WebP files in `backend/scripts/seed_images/`, one per product, named by a slug of the product name (`image_slug`, for example `disposable-syringes-5ml.webp`). `seed_demo` saves each one unchanged through the same storage interface (local disk or R2), so a fresh clone shows real pictures. A product without a file falls back to a plain SVG placeholder (the product name on a coloured background); uploads by the manager still accept only JPEG, PNG and WebP, so SVG cannot be uploaded through the API, and the seed writes its own trusted SVG directly.
 
 ## 8. Business rules in code
 
@@ -267,7 +267,7 @@ page load with token       GET /auth/me, then GET /me/cart; no PUT before it com
 | Categories | Medical Consumables, Medical Devices, First Aid & Wound Care |
 | Products | 12, all active: 4 with one tier, 4 with two, 4 with three (for example Nitrile Examination Gloves: 1 pack 5.500, 4 packs 19.500, 12 packs 55.000 KWD) |
 | Arabic | none: the manager adds Arabic names, descriptions and labels in the admin area; until then the English text is shown in the Arabic view |
-| Images | one SVG placeholder per product (name centred on a plain background, tinted by category), stored through the normal storage backend as `products/{id}/placeholder.svg` |
+| Images | one photo per product from `scripts/seed_images/{slug}.webp`, stored through the normal storage backend as `products/{id}/{slug}.webp`; an SVG placeholder (`products/{id}/placeholder.svg`) only for a product without a photo |
 | Accounts | Admin from env, plus one demo customer (`DEMO_PASSWORD`). The admin email and password are shown on the sign-in page; the customer password is sent with the submission. The README holds no credentials |
 
 **Reset.** `--reset` or `SEED_DEMO_RESET=true` deletes every product, tier, image row, brand and category (and the stored files, best effort) and then seeds. It is skipped when the marker brand already exists, so it can only replace a catalog that is not the demo one, and cannot wipe a seeded catalog on every restart.
@@ -328,13 +328,13 @@ Same as the playbook, scaled down: Railway for the API and Postgres (root direct
 2. **`cart_items` has no foreign keys** to products and tiers (3.2), which departs from the playbook's "explicit `ondelete` on every foreign key" for those two columns, on purpose.
 3. **Error shape** gains an optional `params` object (section 6).
 4. **Deleting the last tier of an active product** deactivates the product (section 8), which the requirements did not specify.
-5. **Seed images are SVG placeholders**, not photographs (section 7).
+5. **Seed images:** one photo per product instead of 2 to 3 (section 7).
 6. **Fonts:** IBM Plex Sans and IBM Plex Sans Arabic for all text (the Arabic family supports Arabic script and reads well at small sizes), and Fraunces bold for the store name only.
 
 ## 15. Decisions made while building
 
 - **Idempotent merge:** `POST /me/cart/merge` accepts a `merge_id` (see 6.4); added after the first version so a lost answer cannot double a guest cart.
-- **Seed images are SVG placeholders** the manager replaces; uploads through the API still accept only JPEG, PNG and WebP.
+- **Seed images** were first SVG placeholders; the product photos are now committed with the seed so a fresh clone shows them, with the SVG kept as a fallback. Uploads through the API still accept only JPEG, PNG and WebP.
 - **The shared "visible product" expression** aliases the tier table inside its `EXISTS`, so the same definition of "visible" works in every query, including the quote.
 - **Cart page shows nothing until every line is priced**, to avoid a half-empty summary flashing while the first prices arrive.
 - **The admin area is code-split** (lazy routes): customers never download it.
