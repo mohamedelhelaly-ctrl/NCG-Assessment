@@ -14,7 +14,7 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
 export default function AdminLayout() {
   const { t } = useTranslation()
   return (
-    <div className="mx-auto grid max-w-6xl gap-x-10 gap-y-4 px-4 py-6 lg:grid-cols-[13rem_minmax(0,1fr)] lg:py-8">
+    <div className="mx-auto grid max-w-7xl gap-x-10 gap-y-4 px-4 py-6 lg:grid-cols-[13rem_minmax(0,1fr)] lg:py-8">
       <div className="lg:sticky lg:top-6 lg:self-start">
         <h1 className="mb-3 text-lg font-semibold">{t('admin.title')}</h1>
         <nav aria-label={t('admin.nav')} className="-mx-4 overflow-x-auto px-4 lg:mx-0 lg:overflow-visible lg:px-0">

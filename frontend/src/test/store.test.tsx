@@ -48,14 +48,14 @@ async function openStore(products = [gloves, syringes, scales], path = '/shop') 
 test('the shop shows the headline, a search box and the products', async () => {
   await openStore()
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-    'Medical supplies, by the pack and by the bundle.',
+    'Stock up today and pay less for every pack.',
   )
   expect(screen.getByRole('search')).toBeInTheDocument()
   expect(screen.getByText('Products: 3')).toBeInTheDocument()
   await waitFor(() => expect(document.title).toBe('Shop · MedicStore'))
 })
 
-test('each card shows the picture, brand, name and category', async () => {
+test('each card shows the picture, brand, category and name', async () => {
   await openStore()
   const c = within(card('Nitrile Examination Gloves'))
   expect(c.getByText('Nuvexa Medical')).toBeInTheDocument()
@@ -72,30 +72,32 @@ test('a product with no picture shows a quiet placeholder, not a broken image', 
   expect(within(c).getByText('No picture yet')).toBeInTheDocument()
 })
 
-test('products with one, two and three offers all show every offer and its price', async () => {
+test('products with one, two and three bundles all show a chip for each bundle', async () => {
   await openStore()
   const three = within(card('Nitrile Examination Gloves')).getAllByRole('radio')
-  expect(three).toHaveLength(3)
-  expect(three[0].closest('label')).toHaveTextContent(/1 pack\s*KWD\s5\.500/)
-  expect(three[1].closest('label')).toHaveTextContent(/4 packs\s*KWD\s19\.500/)
-  expect(three[2].closest('label')).toHaveTextContent(/12 packs\s*KWD\s55\.000/)
-
+  expect(three.map((r) => r.closest('label')!.textContent)).toEqual(['1 pack', '4 packs', '12 packs'])
   expect(within(card('Disposable Syringes (5ml)')).getAllByRole('radio')).toHaveLength(2)
   expect(within(card('Digital Weighing Scales')).getAllByRole('radio')).toHaveLength(1)
 })
 
-test('bundles show the price per pack and the cheapest one is marked best value', async () => {
+test('the card shows the price of the chosen bundle, its price per pack and best value', async () => {
   await openStore()
-  const labels = within(card('Nitrile Examination Gloves')).getAllByRole('radio').map((r) => r.closest('label')!)
-  expect(labels[1]).toHaveTextContent(kwd('4.875'))
-  expect(labels[2]).toHaveTextContent(kwd('4.583'))
-  expect(labels[0]).not.toHaveTextContent('per pack') // a single pack has no "per pack" line
-  expect(labels[2]).toHaveTextContent('Best value')
-  expect(labels[0]).not.toHaveTextContent('Best value')
-  expect(labels[1]).not.toHaveTextContent('Best value')
+  const c = within(card('Nitrile Examination Gloves'))
+  const radios = c.getAllByRole('radio')
+  expect(c.getByText(kwd('5.500'))).toBeInTheDocument()
+  expect(c.queryByText(/per pack/)).not.toBeInTheDocument() // a single pack has no "per pack" line
+  expect(c.queryByText('Best value')).not.toBeInTheDocument()
+  await userEvent.click(radios[1])
+  expect(c.getByText(kwd('19.500'))).toBeInTheDocument()
+  expect(c.getByText(kwd('4.875') )).toBeInTheDocument()
+  expect(c.queryByText('Best value')).not.toBeInTheDocument()
+  await userEvent.click(radios[2])
+  expect(c.getByText(kwd('55.000'))).toBeInTheDocument()
+  expect(c.getByText(kwd('4.583'))).toBeInTheDocument()
+  expect(c.getByText('Best value')).toBeInTheDocument()
 })
 
-test('a product with one offer has no best value marker', async () => {
+test('a product with one bundle has no best value marker', async () => {
   await openStore()
   expect(within(card('Digital Weighing Scales')).queryByText('Best value')).not.toBeInTheDocument()
 })
@@ -119,27 +121,27 @@ test('choosing an offer on one card does not change another card', async () => {
 
 // ------------------------------------------------------------------- the filters
 
-test('categories and brands are listed with their product counts', async () => {
+test('category and brand are dropdowns with their product counts', async () => {
   await openStore()
-  const filters = screen.getByRole('region', { name: 'Filter products' })
-  expect(within(filters).getByRole('button', { name: /All products\s*6/ })).toHaveAttribute('aria-pressed', 'true')
-  expect(within(filters).getByRole('button', { name: /Medical Devices\s*2/ })).toBeInTheDocument()
-  expect(within(filters).getByRole('button', { name: /Orvanta Health\s*4/ })).toBeInTheDocument()
-  expect(within(filters).getByRole('button', { name: 'All brands' })).toHaveAttribute('aria-pressed', 'true')
+  const category = screen.getByRole('combobox', { name: 'Category' })
+  const brand = screen.getByRole('combobox', { name: 'Brand' })
+  expect(within(category).getByRole('option', { name: 'All categories' })).toBeInTheDocument()
+  expect(within(category).getByRole('option', { name: 'Medical Devices (2)' })).toBeInTheDocument()
+  expect(within(brand).getByRole('option', { name: 'All brands' })).toBeInTheDocument()
+  expect(within(brand).getByRole('option', { name: 'Orvanta Health (4)' })).toBeInTheDocument()
 })
 
-test('choosing a category filters on the server and shows the filter', async () => {
+test('choosing a category filters on the server', async () => {
   const calls = await openStore()
-  await userEvent.click(screen.getByRole('button', { name: /Medical Devices/ }))
+  await userEvent.selectOptions(await screen.findByRole('combobox', { name: 'Category' }), '2')
   await waitFor(() => expect(callsTo(calls, LIST).at(-1)!.url.searchParams.get('category_id')).toBe('2'))
-  expect(screen.getByRole('button', { name: /Medical Devices/, pressed: true })).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: 'Remove filter: Medical Devices' })).toBeInTheDocument()
+  expect(screen.getByRole('combobox', { name: 'Category' })).toHaveValue('2')
 })
 
 test('brand and category filters combine', async () => {
   const calls = await openStore()
-  await userEvent.click(screen.getByRole('button', { name: /Medical Devices/ }))
-  await userEvent.click(screen.getByRole('button', { name: /Orvanta Health/ }))
+  await userEvent.selectOptions(await screen.findByRole('combobox', { name: 'Category' }), '2')
+  await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Brand' }), '2')
   await waitFor(() => {
     const params = callsTo(calls, LIST).at(-1)!.url.searchParams
     expect(params.get('category_id')).toBe('2')
@@ -147,13 +149,14 @@ test('brand and category filters combine', async () => {
   })
 })
 
-test('a filter can be removed from its chip, and all filters can be cleared', async () => {
+test('a filter can be reset from its dropdown, and all filters can be cleared', async () => {
   const calls = await openStore([gloves], '/shop?category=2&brand=2')
-  await screen.findByRole('button', { name: 'Remove filter: Medical Devices' })
-  await userEvent.click(screen.getByRole('button', { name: 'Remove filter: Medical Devices' }))
+  const category = await screen.findByRole('combobox', { name: 'Category' })
+  await waitFor(() => expect(category).toHaveValue('2'))
+  await userEvent.selectOptions(category, '')
   await waitFor(() => expect(callsTo(calls, LIST).at(-1)!.url.searchParams.get('category_id')).toBeNull())
   expect(callsTo(calls, LIST).at(-1)!.url.searchParams.get('brand_id')).toBe('2')
-  await userEvent.click(screen.getByRole('button', { name: 'Clear filters' }))
+  await userEvent.click(await screen.findByRole('button', { name: 'Clear filters' }))
   await waitFor(() => expect(callsTo(calls, LIST).at(-1)!.url.searchParams.get('brand_id')).toBeNull())
 })
 
@@ -172,17 +175,8 @@ test('filters in the address are applied on arrival', async () => {
 
 test('changing a filter goes back to the first page', async () => {
   const calls = await openStore([gloves], '/shop?page=3')
-  await userEvent.click(await screen.findByRole('button', { name: /Medical Devices/ }))
+  await userEvent.selectOptions(await screen.findByRole('combobox', { name: 'Category' }), '2')
   await waitFor(() => expect(callsTo(calls, LIST).at(-1)!.url.searchParams.get('page')).toBe('1'))
-})
-
-test('on a phone the filters open from a button that reports its state', async () => {
-  await openStore([gloves], '/shop?brand=1')
-  const toggle = screen.getByRole('button', { name: /^Filters/ })
-  expect(toggle).toHaveAttribute('aria-expanded', 'false')
-  expect(toggle).toHaveTextContent('1') // one filter is active
-  await userEvent.click(toggle)
-  expect(toggle).toHaveAttribute('aria-expanded', 'true')
 })
 
 // -------------------------------------------------------------------- the search
@@ -316,14 +310,16 @@ test('a cart from an earlier visit still shows its count', async () => {
 test('in Arabic the page is translated, prices keep Latin digits and the Arabic currency sign', async () => {
   await openStore()
   await userEvent.click(screen.getByRole('button', { name: 'العربية' }))
-  expect(await screen.findByRole('heading', { level: 1, name: 'مستلزمات طبية، تُباع بالعبوة وبالحزمة.' })).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { level: 1, name: 'خزّن اليوم وادفع أقل عن كل عبوة.' })).toBeInTheDocument()
   expect(screen.getAllByRole('button', { name: 'أضف إلى السلة' })).toHaveLength(3)
+  await userEvent.click(within(card('Nitrile Examination Gloves')).getAllByRole('radio')[2]) // 12 packs
   const text = card('Nitrile Examination Gloves').textContent ?? ''
-  expect(text).toContain('19.500')
+  expect(text).toContain('55.000')
   expect(text).toContain('د.ك')
   expect(text).not.toMatch(/[٠-٩]/)
   expect(text).toContain('الأوفر') // best value, in Arabic
-  expect(screen.getByRole('region', { name: 'تصفية المنتجات' })).toBeInTheDocument()
+  expect(screen.getByRole('combobox', { name: 'الفئة' })).toBeInTheDocument()
+  expect(screen.getByRole('option', { name: 'كل الفئات' })).toBeInTheDocument()
 })
 
 test('switching language refetches the products so names come back in that language', async () => {

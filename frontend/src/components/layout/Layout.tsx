@@ -41,7 +41,7 @@ export default function Layout() {
       <header className="border-b-2 border-teal bg-surface">
         <nav
           aria-label={t('nav.main')}
-          className="mx-auto grid min-h-16 max-w-6xl grid-cols-[auto_1fr_auto] items-center gap-0.5 px-1.5 sm:grid-cols-[1fr_auto_1fr] sm:gap-2 sm:px-4"
+          className="mx-auto grid min-h-16 max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-0.5 px-1.5 sm:grid-cols-[1fr_auto_1fr] sm:gap-2 sm:px-4"
         >
           <div className="flex items-center">
             <NavLink to="/shop" className={action}>
@@ -102,7 +102,7 @@ export default function Layout() {
         <Outlet />
       </main>
       <footer className="border-t border-line">
-        <p className="mx-auto max-w-6xl px-4 py-6 text-center text-sm text-muted">
+        <p className="mx-auto max-w-7xl px-4 py-6 text-center text-sm text-muted">
           {t('footer.line', { year: YEAR })}
         </p>
       </footer>

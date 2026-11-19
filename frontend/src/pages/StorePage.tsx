@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
-import FilterPanel from '../components/store/FilterPanel'
 import ProductCard from '../components/store/ProductCard'
 import { ProductGridSkeleton } from '../components/store/Skeletons'
 import { EmptyState, ErrorState } from '../components/ui/Feedback'
+import { SearchIcon } from '../components/ui/Icons'
 import Pagination from '../components/ui/Pagination'
 import { useApi } from '../hooks/useApi'
 import { useDebounce } from '../hooks/useDebounce'
@@ -50,6 +50,7 @@ export default function StorePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debounced])
 
+  // Enter searches straight away, without waiting for the pause
   function submit(event: FormEvent) {
     event.preventDefault()
     update({ q: searchText.trim() || null })
@@ -62,8 +63,6 @@ export default function StorePage() {
   const brands = useApi('store-brands', () => api.get<NamedCount[]>('/api/v1/brands'))
   const categories = useApi('store-categories', () => api.get<NamedCount[]>('/api/v1/categories'))
 
-  const brandName = brands.data?.find((b) => String(b.id) === brand)?.name
-  const categoryName = categories.data?.find((c) => String(c.id) === category)?.name
   const filtered = Boolean(q || brand || category)
   const data = products.data
 
@@ -73,94 +72,117 @@ export default function StorePage() {
   }
 
   return (
-    <>
-      <section className="border-b border-line">
-        <div className="mx-auto max-w-6xl px-4 py-10 sm:py-14">
-          <h1 className="max-w-3xl text-[2rem] font-semibold leading-[1.15] sm:text-5xl ltr:tracking-tight">
-            {t('store.heroTitle')}
-          </h1>
-          <p className="mt-3 max-w-xl text-lg text-muted">{t('store.heroSub')}</p>
-          <form role="search" onSubmit={submit} className="mt-7 flex max-w-2xl gap-2">
-            <label htmlFor="store-search" className="sr-only">
-              {t('store.searchLabel')}
-            </label>
-            <input
-              id="store-search"
-              type="search"
-              className="input h-12 flex-1 text-base"
-              placeholder={t('store.searchPlaceholder')}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              autoComplete="off"
-            />
-            <button type="submit" className="btn btn-primary h-12 px-6 text-base">
-              {t('store.searchButton')}
-            </button>
-          </form>
+    <div className="mx-auto max-w-7xl px-4 pb-16 pt-10 sm:pt-14">
+      <h1 className="mx-auto max-w-3xl text-balance text-center font-brand text-4xl font-bold leading-[1.1] tracking-[-0.01em] text-primary-strong sm:text-5xl">
+        {t('store.quote')}
+      </h1>
+
+      <form
+        role="search"
+        onSubmit={submit}
+        className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-[minmax(0,1fr)_13rem_13rem]"
+      >
+        <div className="relative col-span-2 md:col-span-1">
+          <label htmlFor="store-search" className="sr-only">
+            {t('store.searchLabel')}
+          </label>
+          <input
+            id="store-search"
+            type="search"
+            className="input h-12 pe-12 [&::-webkit-search-cancel-button]:hidden"
+            placeholder={t('store.searchPlaceholder')}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            autoComplete="off"
+          />
+          <SearchIcon className="pointer-events-none absolute end-4 top-1/2 size-5 -translate-y-1/2 text-teal" />
         </div>
+        <select
+          aria-label={t('store.categoryTitle')}
+          className="input h-12"
+          value={category}
+          onChange={(e) => update({ category: e.target.value || null })}
+        >
+          <option value="">{t('store.allCategories')}</option>
+          {(categories.data ?? []).map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name} ({c.product_count})
+            </option>
+          ))}
+        </select>
+        <select
+          aria-label={t('store.brandTitle')}
+          className="input h-12"
+          value={brand}
+          onChange={(e) => update({ brand: e.target.value || null })}
+        >
+          <option value="">{t('store.allBrands')}</option>
+          {(brands.data ?? []).map((b) => (
+            <option key={b.id} value={b.id}>
+              {b.name} ({b.product_count})
+            </option>
+          ))}
+        </select>
+      </form>
+
+      <section aria-label={t('title.shop')} className="mt-8 min-w-0 space-y-6" aria-busy={products.loading}>
+        {data && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <p className="text-sm font-medium" aria-live="polite">
+              {t('store.results', { count: data.total })}
+            </p>
+            {q && (
+              <Chip
+                label={`“${q}”`}
+                onRemove={() => {
+                  setSearchText('')
+                  update({ q: null })
+                }}
+              />
+            )}
+            {filtered && data.items.length > 0 && (
+              <button type="button" className="btn btn-sm btn-quiet" onClick={clearAll}>
+                {t('common.clearFilters')}
+              </button>
+            )}
+          </div>
+        )}
+
+        {products.loading && !data && <ProductGridSkeleton />}
+        {products.error !== null && !data && (
+          <ErrorState message={errorText(t, products.error)} onRetry={products.reload} />
+        )}
+
+        {data && data.items.length === 0 && (
+          <div className="space-y-3">
+            <EmptyState>{filtered ? t('store.empty') : t('store.emptyAll')}</EmptyState>
+            {filtered && (
+              <button type="button" className="btn" onClick={clearAll}>
+                {t('common.clearFilters')}
+              </button>
+            )}
+          </div>
+        )}
+
+        {data && data.items.length > 0 && (
+          <div
+            className={`grid gap-6 sm:grid-cols-2 lg:grid-cols-3 ${products.loading ? 'opacity-60' : ''}`}
+          >
+            {data.items.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
+
+        {data && (
+          <Pagination
+            page={data.page}
+            totalPages={data.total_pages}
+            onChange={(next) => update({ page: String(next) })}
+          />
+        )}
       </section>
-
-      <div className="mx-auto grid max-w-6xl gap-x-12 gap-y-8 px-4 py-10 lg:grid-cols-[14rem_minmax(0,1fr)]">
-        <FilterPanel
-          categories={categories.data ?? []}
-          brands={brands.data ?? []}
-          category={category}
-          brand={brand}
-          onCategory={(id) => update({ category: id || null })}
-          onBrand={(id) => update({ brand: id || null })}
-        />
-
-        <section aria-label={t('title.home')} className="min-w-0 space-y-6" aria-busy={products.loading}>
-          {data && (
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-              <p className="text-sm font-medium" aria-live="polite">
-                {t('store.results', { count: data.total })}
-              </p>
-              {q && <Chip label={`“${q}”`} onRemove={() => { setSearchText(''); update({ q: null }) }} />}
-              {categoryName && <Chip label={categoryName} onRemove={() => update({ category: null })} />}
-              {brandName && <Chip label={brandName} onRemove={() => update({ brand: null })} />}
-              {filtered && data.items.length > 0 && (
-                <button type="button" className="btn btn-sm btn-quiet" onClick={clearAll}>
-                  {t('common.clearFilters')}
-                </button>
-              )}
-            </div>
-          )}
-
-          {products.loading && !data && <ProductGridSkeleton />}
-          {products.error !== null && !data && (
-            <ErrorState message={errorText(t, products.error)} onRetry={products.reload} />
-          )}
-
-          {data && data.items.length === 0 && (
-            <div className="space-y-3">
-              <EmptyState>{filtered ? t('store.empty') : t('store.emptyAll')}</EmptyState>
-              {filtered && (
-                <button type="button" className="btn" onClick={clearAll}>
-                  {t('common.clearFilters')}
-                </button>
-              )}
-            </div>
-          )}
-
-          {data && data.items.length > 0 && (
-            <div className={`grid gap-x-8 gap-y-12 sm:grid-cols-2 xl:grid-cols-3 ${products.loading ? 'opacity-60' : ''}`}>
-              {data.items.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          )}
-
-          {data && (
-            <Pagination
-              page={data.page}
-              totalPages={data.total_pages}
-              onChange={(next) => update({ page: String(next) })}
-            />
-          )}
-        </section>
-      </div>
-    </>
+    </div>
   )
 }
 

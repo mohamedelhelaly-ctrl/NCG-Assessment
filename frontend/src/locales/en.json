@@ -57,12 +57,8 @@
     "registerButton": "Create account",
     "haveAccount": "Already registered?",
     "signInLink": "Sign in",
-    "tagline": "Medical supplies, sold by the pack and by the bundle.",
-    "ladder": {
-      "one": "1 pack",
-      "four": "4 packs",
-      "twelve": "12 packs"
-    }
+    "quote": "Good care starts with the right supplies.",
+    "guest": "Continue as guest"
   },
   "notFound": {
     "title": "Page not found",
@@ -223,15 +219,10 @@
     }
   },
   "store": {
-    "heroTitle": "Medical supplies, by the pack and by the bundle.",
-    "heroSub": "Pick a bundle and pay less for every pack.",
     "searchLabel": "Search products, brands or categories",
     "searchPlaceholder": "Search gloves, syringes, bandages…",
-    "searchButton": "Search",
-    "filters": "Filters",
     "categoryTitle": "Category",
     "brandTitle": "Brand",
-    "allProducts": "All products",
     "allBrands": "All brands",
     "results": "Products: {{count}}",
     "removeFilter": "Remove filter: {{name}}",
@@ -245,7 +236,8 @@
     "addToCart": "Add to cart",
     "added": "Added to cart",
     "noImage": "No picture yet",
-    "filterGroup": "Filter products"
+    "quote": "Stock up today and pay less for every pack.",
+    "allCategories": "All categories"
   },
   "product": {
     "back": "All products",

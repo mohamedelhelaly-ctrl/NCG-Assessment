@@ -103,3 +103,11 @@ test('signing out clears the token and returns to the sign-in page', async () =>
   expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeInTheDocument()
   expect(localStorage.getItem('auth:token')).toBeNull()
 })
+
+test('the sign-in and register pages offer to continue as a guest, back to the home page', async () => {
+  mockApi(healthy)
+  renderApp('/login')
+  expect(screen.getByRole('link', { name: 'Continue as guest' })).toHaveAttribute('href', '/')
+  expect(screen.getByText('Good care starts with the right supplies.')).toBeInTheDocument()
+  expect(screen.queryByText(/sold by the pack and by the bundle/)).not.toBeInTheDocument()
+})

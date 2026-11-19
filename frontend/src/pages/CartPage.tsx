@@ -23,7 +23,7 @@ export default function CartPage() {
   const showContent = quote.data !== null && (priced || !quote.loading)
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:py-10">
       <div className="mb-6 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
         <h1 className="text-3xl font-semibold ltr:tracking-tight">{t('cart.title')}</h1>
         {!empty && !loading && (

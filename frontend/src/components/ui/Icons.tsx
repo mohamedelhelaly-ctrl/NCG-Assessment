@@ -29,3 +29,28 @@ export function CartIcon({ className = 'size-5' }: { className?: string }) {
     </svg>
   )
 }
+
+export function SearchIcon({ className = 'size-5' }: { className?: string }) {
+  return (
+    <svg {...base} className={className}>
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m16 16 4.5 4.5" />
+    </svg>
+  )
+}
+
+export function PlusIcon({ className = 'size-6' }: { className?: string }) {
+  return (
+    <svg {...base} strokeWidth={2} className={className}>
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  )
+}
+
+export function CheckIcon({ className = 'size-6' }: { className?: string }) {
+  return (
+    <svg {...base} strokeWidth={2} className={className}>
+      <path d="m5 12.5 4.5 4.5L19 7.5" />
+    </svg>
+  )
+}

@@ -6,7 +6,7 @@ const block = 'rounded-lg bg-line/50'
 export function ProductGridSkeleton() {
   const { t } = useTranslation()
   return (
-    <div role="status" aria-label={t('store.loading')} className="grid gap-x-8 gap-y-12 sm:grid-cols-2 xl:grid-cols-3">
+    <div role="status" aria-label={t('store.loading')} className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 6 }, (_, i) => (
         <div key={i} aria-hidden="true" className="space-y-3">
           <div className={`aspect-[4/3] ${block}`} />

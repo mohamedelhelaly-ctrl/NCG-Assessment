@@ -22,7 +22,7 @@ export default function HomePage() {
   return (
     <>
       <section className="border-b border-line bg-primary-soft">
-        <div className="mx-auto flex max-w-6xl flex-col items-center px-4 py-20 text-center sm:py-28">
+        <div className="mx-auto flex max-w-7xl flex-col items-center px-4 py-20 text-center sm:py-28">
           <h1 className="font-brand text-5xl font-bold leading-none tracking-[-0.02em] text-primary-strong sm:text-7xl">
             {t('app.name')}
           </h1>
@@ -33,7 +33,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section aria-labelledby="top-title" className="mx-auto max-w-6xl px-4 py-14 sm:py-20">
+      <section aria-labelledby="top-title" className="mx-auto max-w-7xl px-4 py-14 sm:py-20">
         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
           <div>
             <h2 id="top-title" className="text-2xl font-semibold sm:text-3xl ltr:tracking-tight">
