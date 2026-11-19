@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
 import ProductCard from '../components/store/ProductCard'
 import { ProductGridSkeleton } from '../components/store/Skeletons'
+import Dropdown from '../components/ui/Dropdown'
 import { EmptyState, ErrorState } from '../components/ui/Feedback'
 import { SearchIcon } from '../components/ui/Icons'
 import Pagination from '../components/ui/Pagination'
@@ -97,32 +98,24 @@ export default function StorePage() {
           />
           <SearchIcon className="pointer-events-none absolute end-4 top-1/2 size-5 -translate-y-1/2 text-teal" />
         </div>
-        <select
-          aria-label={t('store.categoryTitle')}
-          className="input h-12"
+        <Dropdown
+          label={t('store.categoryTitle')}
           value={category}
-          onChange={(e) => update({ category: e.target.value || null })}
-        >
-          <option value="">{t('store.allCategories')}</option>
-          {(categories.data ?? []).map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name} ({c.product_count})
-            </option>
-          ))}
-        </select>
-        <select
-          aria-label={t('store.brandTitle')}
-          className="input h-12"
+          onChange={(value) => update({ category: value || null })}
+          options={[
+            { value: '', label: t('store.allCategories') },
+            ...(categories.data ?? []).map((c) => ({ value: String(c.id), label: c.name })),
+          ]}
+        />
+        <Dropdown
+          label={t('store.brandTitle')}
           value={brand}
-          onChange={(e) => update({ brand: e.target.value || null })}
-        >
-          <option value="">{t('store.allBrands')}</option>
-          {(brands.data ?? []).map((b) => (
-            <option key={b.id} value={b.id}>
-              {b.name} ({b.product_count})
-            </option>
-          ))}
-        </select>
+          onChange={(value) => update({ brand: value || null })}
+          options={[
+            { value: '', label: t('store.allBrands') },
+            ...(brands.data ?? []).map((b) => ({ value: String(b.id), label: b.name })),
+          ]}
+        />
       </form>
 
       <section aria-label={t('title.shop')} className="mt-8 min-w-0 space-y-6" aria-busy={products.loading}>

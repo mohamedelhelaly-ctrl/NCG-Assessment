@@ -47,6 +47,8 @@
   "auth": {
     "signInTitle": "Sign in",
     "email": "Email",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "password": "Password",
     "fullName": "Full name",
     "passwordHint": "At least 10 characters.",
@@ -70,6 +72,7 @@
   "validation": {
     "required": "This field is required",
     "maxLength": "At most {{max}} characters",
+    "email": "Enter a valid email address, for example name@example.com",
     "passwordLength": "Password must be at least 10 characters",
     "units": "Enter a whole number of 1 or more",
     "price": "Enter a price in KWD greater than 0, with up to 3 decimals, for example 19.500",

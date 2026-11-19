@@ -121,27 +121,51 @@ test('choosing an offer on one card does not change another card', async () => {
 
 // ------------------------------------------------------------------- the filters
 
-test('category and brand are dropdowns with their product counts', async () => {
+async function choose(name: string, option: string) {
+  await userEvent.click(await screen.findByRole('combobox', { name }))
+  await userEvent.click(within(screen.getByRole('listbox', { name })).getByRole('option', { name: option }))
+}
+
+test('category and brand are custom dropdowns whose options show no product counts', async () => {
   await openStore()
-  const category = screen.getByRole('combobox', { name: 'Category' })
-  const brand = screen.getByRole('combobox', { name: 'Brand' })
-  expect(within(category).getByRole('option', { name: 'All categories' })).toBeInTheDocument()
-  expect(within(category).getByRole('option', { name: 'Medical Devices (2)' })).toBeInTheDocument()
-  expect(within(brand).getByRole('option', { name: 'All brands' })).toBeInTheDocument()
-  expect(within(brand).getByRole('option', { name: 'Orvanta Health (4)' })).toBeInTheDocument()
+  expect(document.querySelector('select')).toBeNull()
+  await userEvent.click(screen.getByRole('combobox', { name: 'Category' }))
+  const list = screen.getByRole('listbox', { name: 'Category' })
+  expect(within(list).getByRole('option', { name: 'All categories' })).toBeInTheDocument()
+  expect(within(list).getByRole('option', { name: 'Medical Devices' })).toBeInTheDocument()
+  expect(list.textContent).not.toMatch(/\(\d+\)/)
+  await userEvent.keyboard('{Escape}')
+  expect(screen.queryByRole('listbox')).toBeNull()
+  await userEvent.click(screen.getByRole('combobox', { name: 'Brand' }))
+  const brands = screen.getByRole('listbox', { name: 'Brand' })
+  expect(within(brands).getByRole('option', { name: 'All brands' })).toBeInTheDocument()
+  expect(within(brands).getByRole('option', { name: 'Orvanta Health' })).toBeInTheDocument()
+  expect(brands.textContent).not.toMatch(/\(\d+\)/)
+})
+
+test('a dropdown works from the keyboard and closes on an outside click', async () => {
+  const calls = await openStore()
+  const category = await screen.findByRole('combobox', { name: 'Category' })
+  category.focus()
+  await userEvent.keyboard('{ArrowDown}{ArrowDown}{Enter}')
+  await waitFor(() => expect(callsTo(calls, LIST).at(-1)!.url.searchParams.get('category_id')).not.toBeNull())
+  await userEvent.click(category)
+  expect(screen.getByRole('listbox')).toBeInTheDocument()
+  await userEvent.click(document.body)
+  expect(screen.queryByRole('listbox')).toBeNull()
 })
 
 test('choosing a category filters on the server', async () => {
   const calls = await openStore()
-  await userEvent.selectOptions(await screen.findByRole('combobox', { name: 'Category' }), '2')
+  await choose('Category', 'Medical Devices')
   await waitFor(() => expect(callsTo(calls, LIST).at(-1)!.url.searchParams.get('category_id')).toBe('2'))
-  expect(screen.getByRole('combobox', { name: 'Category' })).toHaveValue('2')
+  expect(screen.getByRole('combobox', { name: 'Category' })).toHaveTextContent('Medical Devices')
 })
 
 test('brand and category filters combine', async () => {
   const calls = await openStore()
-  await userEvent.selectOptions(await screen.findByRole('combobox', { name: 'Category' }), '2')
-  await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Brand' }), '2')
+  await choose('Category', 'Medical Devices')
+  await choose('Brand', 'Orvanta Health')
   await waitFor(() => {
     const params = callsTo(calls, LIST).at(-1)!.url.searchParams
     expect(params.get('category_id')).toBe('2')
@@ -152,8 +176,8 @@ test('brand and category filters combine', async () => {
 test('a filter can be reset from its dropdown, and all filters can be cleared', async () => {
   const calls = await openStore([gloves], '/shop?category=2&brand=2')
   const category = await screen.findByRole('combobox', { name: 'Category' })
-  await waitFor(() => expect(category).toHaveValue('2'))
-  await userEvent.selectOptions(category, '')
+  await waitFor(() => expect(category).toHaveTextContent('Medical Devices'))
+  await choose('Category', 'All categories')
   await waitFor(() => expect(callsTo(calls, LIST).at(-1)!.url.searchParams.get('category_id')).toBeNull())
   expect(callsTo(calls, LIST).at(-1)!.url.searchParams.get('brand_id')).toBe('2')
   await userEvent.click(await screen.findByRole('button', { name: 'Clear filters' }))
@@ -175,7 +199,7 @@ test('filters in the address are applied on arrival', async () => {
 
 test('changing a filter goes back to the first page', async () => {
   const calls = await openStore([gloves], '/shop?page=3')
-  await userEvent.selectOptions(await screen.findByRole('combobox', { name: 'Category' }), '2')
+  await choose('Category', 'Medical Devices')
   await waitFor(() => expect(callsTo(calls, LIST).at(-1)!.url.searchParams.get('page')).toBe('1'))
 })
 
@@ -319,6 +343,7 @@ test('in Arabic the page is translated, prices keep Latin digits and the Arabic 
   expect(text).not.toMatch(/[٠-٩]/)
   expect(text).toContain('الأوفر') // best value, in Arabic
   expect(screen.getByRole('combobox', { name: 'الفئة' })).toBeInTheDocument()
+  await userEvent.click(screen.getByRole('combobox', { name: 'الفئة' }))
   expect(screen.getByRole('option', { name: 'كل الفئات' })).toBeInTheDocument()
 })
 

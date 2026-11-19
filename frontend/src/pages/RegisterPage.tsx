@@ -24,6 +24,11 @@ export default function RegisterPage() {
     const password = String(form.get('password'))
     setError(null)
     setFields({})
+    const email = String(form.get('email')).trim()
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      setFields({ email: t('validation.email') })
+      return
+    }
     if (password.length < 10) {
       // Checked here too so the message is in the user's language.
       setFields({ password: t('validation.passwordLength') })
@@ -31,7 +36,7 @@ export default function RegisterPage() {
     }
     setSubmitting(true)
     try {
-      await register(String(form.get('full_name')), String(form.get('email')), password)
+      await register(String(form.get('full_name')), email, password)
       navigate('/', { replace: true })
     } catch (e) {
       if (e instanceof ApiError && Object.keys(e.fields).length > 0) setFields(e.fields)
