@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import Field from '../../components/common/Field'
@@ -33,6 +33,16 @@ export default function NamedPage({ kind }: { kind: Kind }) {
   const [pageError, setPageError] = useState<unknown>(null)
   const [deleting, setDeleting] = useState<NamedAdmin | null>(null)
   const [busy, setBusy] = useState(false)
+
+  // On a phone the form sits after the list, so bring it into view when it opens.
+  const formRef = useRef<HTMLFormElement>(null)
+  useEffect(() => {
+    if (editing === null || !formRef.current) return
+    if (typeof matchMedia === 'function' && !matchMedia('(min-width: 1024px)').matches) {
+      formRef.current.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
+      formRef.current.querySelector('input')?.focus({ preventScroll: true })
+    }
+  }, [editing])
 
   function open(target: NamedAdmin | 'new') {
     setEditing(target)
@@ -91,7 +101,7 @@ export default function NamedPage({ kind }: { kind: Kind }) {
   }
 
   return (
-    <section className="space-y-5" aria-labelledby={`${kind}-heading`}>
+    <section className="flex flex-col gap-5" aria-labelledby={`${kind}-heading`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 id={`${kind}-heading`} className="text-2xl font-semibold">
           {t(`admin.${kind}.title`)}
@@ -108,7 +118,8 @@ export default function NamedPage({ kind }: { kind: Kind }) {
         <form
           onSubmit={onSubmit}
           noValidate
-          className="space-y-4 rounded-lg border border-line bg-surface p-5"
+          ref={formRef}
+          className="order-last space-y-4 rounded-lg border border-line bg-surface p-5 lg:order-none"
         >
           <h3 className="text-lg font-semibold">
             {editing === 'new' ? t(`admin.${kind}.new`) : t(`admin.${kind}.edit`)}

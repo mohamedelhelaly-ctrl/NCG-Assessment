@@ -63,3 +63,19 @@ export function ChevronIcon({ className = 'size-6' }: { className?: string }) {
     </svg>
   )
 }
+
+export function MenuIcon({ className = 'size-6' }: { className?: string }) {
+  return (
+    <svg {...base} strokeWidth={2} className={className}>
+      <path d="M4 7h16M4 12h16M4 17h16" />
+    </svg>
+  )
+}
+
+export function CloseIcon({ className = 'size-6' }: { className?: string }) {
+  return (
+    <svg {...base} strokeWidth={2} className={className}>
+      <path d="M6 6l12 12M18 6 6 18" />
+    </svg>
+  )
+}

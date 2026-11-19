@@ -8,6 +8,7 @@ import TierSection from '../../components/admin/TierSection'
 import Field from '../../components/common/Field'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import { ErrorState, LoadingState, Notice } from '../../components/ui/Feedback'
+import { ChevronIcon } from '../../components/ui/Icons'
 import { useApi } from '../../hooks/useApi'
 import { usePageTitle } from '../../hooks/usePageTitle'
 import { api, ApiError } from '../../lib/api'
@@ -222,7 +223,11 @@ function ProductForm({
   return (
     <div className="space-y-8">
       <div className="space-y-1.5">
-        <Link to="/admin/products" className="text-sm text-muted hover:text-primary">
+        <Link
+          to="/admin/products"
+          className="inline-flex items-center gap-1.5 text-base font-medium text-primary underline underline-offset-4 transition-colors hover:text-primary-strong"
+        >
+          <ChevronIcon className="size-4 -scale-x-100 rtl:scale-x-100" />
           {t('admin.form.backToList')}
         </Link>
         <h2 className="text-2xl font-semibold">
@@ -244,7 +249,7 @@ function ProductForm({
           aria-label={t('admin.form.details')}
           className="space-y-5 lg:col-start-1"
         >
-          <div className="grid gap-5 md:grid-cols-2">
+          <div className="space-y-5">
             <Field
               label={t('admin.form.nameEn')}
 dir="ltr"
@@ -266,7 +271,7 @@ lang="en"
               hint={form.name_ar.trim() ? undefined : t('admin.form.arabicHint')}
             />
           </div>
-          <div className="grid gap-5 md:grid-cols-2">
+          <div className="space-y-5">
             <Field
               label={t('admin.form.descEn')}
 dir="ltr"
@@ -275,7 +280,7 @@ lang="en"
               onChange={(v) => set('description', v)}
               error={errors.description}
               multiline
-              rows={5}
+              rows={6}
               required
             />
             <Field
@@ -284,7 +289,7 @@ lang="en"
               onChange={(v) => set('description_ar', v)}
               error={errors.description_ar}
               multiline
-              rows={5}
+              rows={6}
               dir="rtl"
               lang="ar"
               hint={form.description_ar.trim() ? undefined : t('admin.form.arabicHint')}
@@ -294,7 +299,7 @@ lang="en"
         </form>
 
         {/* Status, where it sells, and the one Save button. Sticky beside the content on desktop. */}
-        <aside className="space-y-5 self-start rounded-lg border border-line bg-surface p-5 lg:sticky lg:top-6 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+        <aside className="order-last space-y-5 self-start rounded-lg border border-line bg-surface p-5 lg:order-none lg:sticky lg:top-6 lg:col-start-2 lg:row-span-2 lg:row-start-1">
           <div className="flex items-start gap-3">
             <input
               id="product-active"
@@ -426,7 +431,7 @@ function SelectField({
 }) {
   return (
     <label className="block space-y-1.5 text-sm font-medium">
-      <span>{label}</span>
+      <span className="block">{label}</span>
       <select
         className="input"
         value={value}

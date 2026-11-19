@@ -115,7 +115,6 @@ export default function ProductsPage() {
           value={searchText}
           onChange={setSearchText}
           type="search"
-          hint={t('admin.products.searchHint')}
         />
         <Select
           label={t('admin.products.brand')}
@@ -278,7 +277,7 @@ function Select({
 }) {
   return (
     <label className="block space-y-1.5 text-sm font-medium">
-      <span>{label}</span>
+      <span className="block">{label}</span>
       <select className="input" value={value} onChange={(e) => onChange(e.target.value)}>
         <option value="">{allLabel}</option>
         {options.map((o) => (

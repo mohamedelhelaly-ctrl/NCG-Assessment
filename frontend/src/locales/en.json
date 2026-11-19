@@ -11,7 +11,7 @@
   },
   "nav": {
     "main": "Main navigation",
-    "admin": "Admin",
+    "admin": "Manage Store",
     "signIn": "Sign in",
     "createAccount": "Create account",
     "signOut": "Sign out",
@@ -19,7 +19,9 @@
     "cart": "Cart",
     "skip": "Skip to content",
     "shop": "Shop",
-    "home": "MedicStore home"
+    "home": "MedicStore home",
+    "menu": "Menu",
+    "closeMenu": "Close menu"
   },
   "common": {
     "loading": "Loading…",
@@ -122,7 +124,6 @@
       "title": "Products",
       "new": "New product",
       "filters": "Filter products",
-      "searchHint": "Product, brand or category name, in English or Arabic",
       "brand": "Brand",
       "category": "Category",
       "status": "Status",

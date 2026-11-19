@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { expect, test } from 'vitest'
 import { admin, customer, healthy, mockApi, renderApp, tokenFor } from './helpers'
@@ -73,7 +73,7 @@ test('a stored token restores the session, and a customer cannot open /admin', a
   renderApp('/admin')
   expect(await screen.findByText('Cara Customer')).toBeInTheDocument()
   expect(screen.queryByRole('heading', { name: 'Admin area' })).not.toBeInTheDocument()
-  expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: 'Manage Store' })).not.toBeInTheDocument()
 })
 
 test('an admin sees the admin link and the admin area', async () => {
@@ -81,7 +81,7 @@ test('an admin sees the admin link and the admin area', async () => {
   mockApi({ ...healthy, 'GET /api/v1/auth/me': () => ({ body: admin }) })
   renderApp('/admin')
   expect(await screen.findByRole('heading', { name: 'Admin area' })).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: 'Admin' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Manage Store' })).toBeInTheDocument()
 })
 
 test('an expired token (401 on /auth/me) ends the session', async () => {
@@ -110,4 +110,25 @@ test('the sign-in and register pages offer to continue as a guest, back to the h
   expect(screen.getByRole('link', { name: 'Continue as guest' })).toHaveAttribute('href', '/')
   expect(screen.getByText('Good care starts with the right supplies.')).toBeInTheDocument()
   expect(screen.queryByText(/sold by the pack and by the bundle/)).not.toBeInTheDocument()
+})
+
+test('on smaller screens the header menu holds Manage Store, Sign out and the language', async () => {
+  localStorage.setItem('auth:token', 'tok')
+  mockApi({ ...healthy, 'GET /api/v1/auth/me': () => ({ body: admin }) })
+  renderApp('/cart')
+  const toggle = await screen.findByRole('button', { name: 'Menu' })
+  expect(toggle).toHaveAttribute('aria-expanded', 'false')
+  await userEvent.click(toggle)
+  const menu = document.getElementById('header-menu') as HTMLElement
+  expect(within(menu).getByRole('link', { name: 'Manage Store' })).toHaveAttribute('href', '/admin')
+  expect(within(menu).getByRole('button', { name: 'Sign out' })).toBeInTheDocument()
+  expect(within(menu).getByRole('button', { name: 'العربية' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Close menu' })).toHaveAttribute('aria-expanded', 'true')
+  await userEvent.keyboard('{Escape}')
+  expect(document.getElementById('header-menu')).toBeNull()
+  // choosing an item closes the menu by moving to its page
+  await userEvent.click(screen.getByRole('button', { name: 'Menu' }))
+  await userEvent.click(within(document.getElementById('header-menu') as HTMLElement).getByRole('link', { name: 'Manage Store' }))
+  expect(await screen.findByRole('heading', { name: 'Admin area' })).toBeInTheDocument()
+  expect(document.getElementById('header-menu')).toBeNull()
 })
