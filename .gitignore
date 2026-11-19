@@ -229,6 +229,7 @@ setup/
 node_modules/
 frontend/dist/
 backend/uploads/
+skills/
 .taste-skill/
 .envrc
 skills/

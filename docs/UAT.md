@@ -198,6 +198,7 @@ Sign in with the admin account first.
 | K-05 | P2 | D | As a customer (not admin), open `/admin`. | No access: no Manage Store link, and the admin area does not open. | Pass |
 | K-06 | P2 | D+M | Sign-in page: click **Continue as guest**. | Goes to the home page. | Pass |
 | K-07 | P3 | D | As a guest, open `/admin`. | Sent to the sign-in page. | Pass |
+| K-10 | P1 | D+M | Open the sign-in page. | A "Reviewing this store?" box under the form shows the admin email and password. Signing in with them opens Manage Store. | |
 | K-08 | P2 | D+M | Create account: enter `sara@shop` (no dot after the @), a name and a long password, then press **Create account**. | The form does not submit; the Email field shows "Enter a valid email address, for example name@example.com". A correct address such as `sara@shop.example` goes through. | |
 | K-09 | P2 | D+M | On the sign-in page and on the create-account page, type a password and press the eye icon at the right end of the field. | The password becomes readable and the icon changes to a crossed eye; pressing it again hides the password. | |
 
@@ -238,11 +239,11 @@ Sign in with the admin account first.
 
 | Priority | Total | Passed | Failed | Skipped |
 |---|---|---|---|---|
-| P1 | 59 | 59 | 0 | 0 |
+| P1 | 60 | 59 | 0 | 0 |
 | P2 | 40 | 37 | 0 | 0 |
 | P3 | 15 | 15 | 0 | 0 |
 
-All original tests (111) were run and passed. The three tests added afterwards (C-15, K-08, K-09) are not yet run on the live site; they pass in the automated suite and in a local browser check.
+All original tests (111) were run and passed. The four tests added afterwards (C-15, K-08, K-09, K-10) are not yet run on the live site; they pass in the automated suite and in a local browser check.
 
 Tested by: ____________  Date: ____________  Devices / browsers: ____________
 

@@ -155,3 +155,13 @@ test.each(['/login', '/register'])('%s can show and hide the password', async (p
   await userEvent.click(screen.getByRole('button', { name: 'Hide password' }))
   expect(password).toHaveAttribute('type', 'password')
 })
+
+test('the sign-in page shows the reviewer admin credentials, and the register page does not', async () => {
+  mockApi({})
+  const { unmount } = renderApp('/login')
+  expect(screen.getByText('Reviewing this store?')).toBeInTheDocument()
+  expect(screen.getByText('admin@example.com')).toBeInTheDocument()
+  unmount()
+  renderApp('/register')
+  expect(screen.queryByText('Reviewing this store?')).toBeNull()
+})
